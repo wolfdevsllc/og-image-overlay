@@ -33,5 +33,3 @@ $imrsmodsUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 	__FILE__,
 	'og-image-overlay'
 );
-
-$imrsmodsUpdateChecker->setAuthentication('9a66fe1daed377d241d6f7e51c6a32a65f129fb8');
