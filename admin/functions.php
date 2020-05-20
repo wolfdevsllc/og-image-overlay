@@ -32,13 +32,13 @@ add_action ( 'admin_init', 'add_menu_link' );
 
 
 function ogio_preview_template( $template ) {
-    if( is_customize_preview() && ( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) ) {
+    if( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) {
         $template =  dirname(__DIR__) . '/template/preview.php';
     }
     return $template;
 }
 
-add_filter( 'template_include', 'ogio_preview_template', 99 );
+add_filter( 'template_include', 'ogio_preview_template', 30000 );
 
 /**
  * Generate Open Graph Image
