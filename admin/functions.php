@@ -5,8 +5,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Add Menu Page
  */
-
-function add_menu_link() {
+function ogio_add_menu_link() {
     $link = add_query_arg(
         array(
             'url'           => urlencode( site_url( '/?ogio_settings=true' ) ),
@@ -24,13 +23,11 @@ function add_menu_link() {
     );
 }
 
-add_action ( 'admin_init', 'add_menu_link' );
+add_action ( 'admin_init', 'ogio_add_menu_link' );
 
 /**
  * Add Template for Customizer Preview
  */
-
-
 function ogio_preview_template( $template ) {
     if( is_customize_preview() && ( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) ) {
         $template =  dirname(__DIR__) . '/template/preview.php';
@@ -107,7 +104,7 @@ function change_rankmath_opengraph_image_url( $attachment_url ) {
     return $attachment_url = plugin_dir_url( __DIR__ ) . 'generate-og-image.php?p=' . $post->ID;
 }
 
-if ( get_option( 'ogio_select_seo_plugin' ) != NULL ) {
+if ( get_option( 'ogio_select_seo_plugin' ) ) {
     $seo_plugin = get_option( 'ogio_select_seo_plugin' );
     if ( $seo_plugin == 'yoast' ) {
         add_filter( 'wpseo_opengraph_image', 'change_yoast_opengraph_image_url' );

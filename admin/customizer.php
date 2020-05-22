@@ -82,7 +82,9 @@ function ogio_customizer_fields( $wp_customize ) {
     ) ) );
 
     $wp_customize->add_setting( 'ogio_select_seo_plugin', array(
-        'default' => 'other',
+        'default'   => 'other',
+        'transport' => 'refresh',
+        'type'      => 'option',
     ) );
 
     $wp_customize->add_control( new WP_Customize_Control( $wp_customize, 'ogio_select_seo_plugin', array(
@@ -93,7 +95,7 @@ function ogio_customizer_fields( $wp_customize ) {
         'choices'      => array(
             'yoast'    => 'Yoast Seo',
             'rankmath' => 'Rank Math',
-            'other'    => 'Other / Disable automated integration'
+            'other'    => 'Other or Disable automated integration'
         ),
     ) ) );
 
@@ -102,7 +104,7 @@ function ogio_customizer_fields( $wp_customize ) {
         'label'       => __('This plugin works automatically along with either Yoast SEO or Rank Math SEO plugin. If you are not using any one of them, you will need to manually set the generated Open Graph Image.', 'ogio'),
         'settings'    => 'ogio_plugin_compatibility_notice',
         'section'     => 'ogio_settings',
-    )));
+    ) ) );
 }
 
 add_action( 'customize_register', 'ogio_customizer_fields' );

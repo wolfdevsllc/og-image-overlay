@@ -33,3 +33,24 @@ $imrsmodsUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 	__FILE__,
 	'og-image-overlay'
 );
+
+/**
+ * Add settings link to plugin actions
+ */
+
+function ogio_add_plugin_link ( $links ) {
+	$link = add_query_arg(
+        array(
+            'url'           => urlencode( site_url( '/?ogio_settings=true' ) ),
+            'return'        => urlencode( admin_url() ),
+            'ogio_settings' => 'true',
+        ),
+        'customize.php?autofocus[section]=ogio_settings'
+    );
+    $settings_link = array(
+        '<a href="' . admin_url( $link ) . '">Settings</a>',
+    );
+    return array_merge( $links, $settings_link );
+}
+
+add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'ogio_add_plugin_link' );
