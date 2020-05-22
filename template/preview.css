@@ -1,8 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
 body.ogio-preview {
     margin: 0;
     padding: 0;
     background: #F0F2F5;
-    font-family: sans-serif;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
 }
 
 #ogio_preview_wrapper {
@@ -124,10 +127,13 @@ body.ogio-preview {
 .next-step-direction h3 {
     font-size: 22px !important;
     margin: 0 0 15px 0 !important;
+    font-weight: 600;
 }
 
 .next-step-direction p {
-    font-size: 14px !important;
+    font-size: 15px !important;
+    line-height: 1.8;
+    letter-spacing: .2px;
 }
 
 .next-step-direction pre {
@@ -137,10 +143,12 @@ body.ogio-preview {
     background: #fafafa;
     line-height: 1.2;
     color: #555;
+    overflow: auto;
 }
 
 .next-step-direction ul {
     margin: 0 !important;
+    padding: 0 !important;
 }
 
 .next-step-direction ul li {
