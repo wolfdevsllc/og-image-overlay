@@ -2,10 +2,10 @@
 Contributors: realblackz
 Donate link: https://itsmereal.com
 Tags: media
-Requires at least: 4.0
-Tested up to: 4.8
+Requires at least: 4.3
+Tested up to: 5.4.1
 Stable tag:
-Requires PHP: 4.8
+Requires PHP: 5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 

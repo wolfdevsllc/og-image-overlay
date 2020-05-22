@@ -6,6 +6,8 @@ Description: Add automated image overlay on top of Open Graph images. This plugi
 Version: 1.0
 Author: Al-Mamun Talukder
 Author URI: https://itsmereal.com
+Requires at least: 4.3
+Tested up to: 5.4.1
 License: GPLv2 or later
 Text Domain: ogio
 */
