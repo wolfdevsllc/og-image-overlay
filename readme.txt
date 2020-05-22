@@ -41,4 +41,4 @@ If you are not using one of them but still want to use overlay image on top of y
 
 = 1.0 =
 * Initial release
-* 2020-05-21
+* 2020-05-22
