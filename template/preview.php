@@ -48,6 +48,5 @@
             </div>
         </div>
         <div class="itsmereal-footer">Made with ♥️ for WordPress by <a href='' onClick="window.open('https://itsmereal.com/?ogio', '_blank')">Al-Mamun Talukder</a></div>
-    <?php if( is_customize_preview() ) wp_footer();?>
     </body>
 </html>
