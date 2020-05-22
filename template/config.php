@@ -30,7 +30,7 @@ if( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) {
  */
 function ogio_remove_other_styles() {
     global $wp_styles;
-    if( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) {
+    if( is_customize_preview() && ( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) ) {
         $wp_styles->queue = array( 'ogio-preview' );
     }
 }

@@ -8,12 +8,20 @@ body.ogio-preview {
     font-weight: 400;
 }
 
+a {
+    font-size: 14px;
+    text-decoration: none;
+    color: #673AB7;
+    cursor: pointer;
+}
+
 #ogio_preview_wrapper {
     background-color: #F0F2F5;
     padding: 50px;
     width: 1200px;
     margin: 0 auto;
     overflow: hidden;
+    height: 100vh;
 }
 
 .ogio-preview-fbbox {
@@ -154,13 +162,6 @@ body.ogio-preview {
 .next-step-direction ul li {
     margin: 0 0 0 20px !important;
     line-height: 1.4;
-}
-
-.next-step-direction ul a {
-    font-size: 14px;
-    text-decoration: none;
-    color: #673AB7;
-    cursor: pointer;
 }
 
 .itsmereal-footer {
