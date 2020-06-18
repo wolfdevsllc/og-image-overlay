@@ -3,7 +3,7 @@ Contributors: realblackz
 Donate link: https://itsmereal.com
 Tags: media
 Requires at least: 4.3
-Tested up to: 5.4.1
+Tested up to: 5.4.2
 Stable tag:
 Requires PHP: 5.4
 License: GPLv2 or later
@@ -39,6 +39,11 @@ If you are not using one of them but still want to use overlay image on top of y
 
 == Changelog ==
 
+= 1.1 =
+* 2020-06-18
+* Fix: customizer issue - 'Settings does not exist or is unrecognized.'
+* Fix: Error notice
+
 = 1.0 =
-* Initial release
 * 2020-05-22
+* Initial release

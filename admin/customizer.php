@@ -107,9 +107,7 @@ function ogio_customizer_fields( $wp_customize ) {
     ) ) );
 }
 
-if( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) {
-    add_action( 'customize_register', 'ogio_customizer_fields' );
-}
+add_action( 'customize_register', 'ogio_customizer_fields' );
 
 function validate_required_number( $validity, $value ) {
     if ( $value < 0 || $value == '' ) {

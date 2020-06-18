@@ -8,6 +8,7 @@ defined( 'ABSPATH' ) || exit;
 function ogio_preview_style() {
     wp_enqueue_style( 'ogio-preview', plugin_dir_url( __FILE__ ). '/preview.css', '1.0' );
     $plugin_images = plugin_dir_url(__DIR__). 'images';
+    $preivew_image_css = '';
     if ( get_option( 'ogio_fallback_image' ) ) {
         $preview_image = get_option( 'ogio_fallback_image' );
         $preview_image = wp_get_attachment_url( $preview_image );
