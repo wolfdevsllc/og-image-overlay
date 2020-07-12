@@ -33,6 +33,8 @@
                 <div class="footer-small-disclaimer">* This preview may not be fully accurate. Actual post can be slighlty different.</div>
             </div>
             <div class="next-step-direction">
+                <h3>How to Setup</h3>
+                <p><a onClick="window.open('https://vimeo.com/437133732', '_blank')"><img style="border: 1px solid #9e9e9e !important" src="https://itsmereal.com/wp-content/uploads/2020/07/ogio-video-300x187.png" alt="Watch How to Setup Open Graph Image Overlay Plugin" /></a></p>
                 <h3>Open Graph Debugger</h3>
                 <p>Check how your page/posts are showing with new Open Graph Image Overlay in the following links:</p>
                 <p>
