@@ -26,7 +26,7 @@ function ogio_customizer_fields( $wp_customize ) {
 
     $wp_customize->add_control( new WP_Customize_Media_Control($wp_customize, 'ogio_fallback_image', array(
         'label'       => __('Set Fallback Image', 'ogio'),
-        'description' => __( 'Select an image for the fallback. This will be used when post featured image is not found.You can try out how your image here.', 'ogio' ),
+        'description' => __( 'Select an image for the fallback. This will be used when post featured image is not found. You can try out how your image here. Recommended size 1200px by 630px', 'ogio' ),
         'section'     => 'ogio_settings',
         'settings'    => 'ogio_fallback_image',
     ) ) );
@@ -38,7 +38,7 @@ function ogio_customizer_fields( $wp_customize ) {
 
     $wp_customize->add_control( new WP_Customize_Media_Control($wp_customize, 'ogio_overlay_image', array(
         'label'       => __('Overlay Image', 'ogio'),
-        'description' => __( 'Select an image for the overlay. For full width, use 1200px wide image.', 'ogio' ),
+        'description' => __( 'Select an image for the overlay. This image should not exced the width of your featured images.', 'ogio' ),
         'section'     => 'ogio_settings',
         'settings'    => 'ogio_overlay_image',
     ) ) );
