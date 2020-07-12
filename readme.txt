@@ -42,7 +42,7 @@ If you are not using one of them but still want to use overlay image on top of y
 = 1.2 =
 * 2020-07-12
 * Changed plugin instructions
-* Added video walkthrough
+* Added 'How to Setup' video
 
 = 1.1 =
 * 2020-06-18
