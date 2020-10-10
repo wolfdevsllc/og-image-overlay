@@ -30,7 +30,7 @@
                     <div class="preview-link-description"></div>
                 </div>
                 <div class="ogio-preview-bottom"></div>
-                <div class="footer-small-disclaimer">* This preview may not be fully accurate. Actual post can be slighlty different.</div>
+                <div class="footer-small-disclaimer">* This preview is accurate only if you use the recommended 1200px by 630px sized image. Always test your output from page source code to make sure it is appropriate.</div>
             </div>
             <div class="next-step-direction">
                 <h3>How to Setup</h3>
