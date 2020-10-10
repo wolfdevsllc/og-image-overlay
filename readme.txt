@@ -39,6 +39,11 @@ If you are not using one of them but still want to use overlay image on top of y
 
 == Changelog ==
 
+= 1.3 =
+* 2020-10-10
+* Changed plugin instructions
+* Updated plugin updater
+
 = 1.2 =
 * 2020-07-12
 * Changed plugin instructions
