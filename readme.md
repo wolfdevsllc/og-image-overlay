@@ -31,6 +31,7 @@ This plugin currently works alongside with two popular SEO plugins.
 ## Video Walkthrough
 [![Watch the video](https://itsmereal.com/wp-content/uploads/2020/07/ogio-video.png)](https://vimeo.com/437133732)
 
+[ভিডিওটি বাংলায় দেখতে চাইলে এখানে ক্লিক করুন](https://www.youtube.com/watch?v=AmYM-_w-K7I)
 
 ## FAQs
 
