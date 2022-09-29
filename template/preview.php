@@ -46,7 +46,7 @@
                 <h3 style="margin-top: 30px !important">Not Using Yoast / Rank Math Plugin?</h3>
                 <p>This plugin works automatically along with Yoast SEO or Rank Math SEO plugin. If you are not using one of them but still want to use overlay image on top of your open graph images, you can manually set the link.</p>
                 <p>You can use the following link for the URL replacement. The <strong>POST_ID</strong> will need to be replaced with a variable.</p>
-                <p><pre><?php echo plugin_dir_url( __DIR__ ); ?>generate-og-image.php?p=POST_ID</pre></p>
+                <p><pre><?php echo site_url(); ?>/ogio/POST_ID</pre></p>
             </div>
         </div>
         <div class="itsmereal-footer">Made with ♥️ for WordPress by <a href='' onClick="window.open('https://itsmereal.com/?ogio', '_blank')">Al-Mamun Talukder</a></div>

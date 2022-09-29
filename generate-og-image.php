@@ -1,6 +1,6 @@
 <?php
 
-require_once( dirname(dirname(dirname(__DIR__))).'/wp-load.php' );
+require_once('wp-load.php');
 
 if ( isset( $_GET ) && isset( $_GET['p'] ) ) {
     $post_id = intval( esc_html( $_GET['p'] ) );

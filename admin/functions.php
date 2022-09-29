@@ -89,11 +89,56 @@ function generate_og_image( $post_id ) {
 }
 
 /**
+ * Rewrite Rule for Open Graph Image URL
+ */
+function ogio_image_rewrite_rule() {
+    add_rewrite_rule( 'ogio/([^/]+)','index.php?ogio=$matches[1]', 'top' );
+}
+
+add_action( 'init', 'ogio_image_rewrite_rule', 10 );
+
+/**
+ * Flus Rewrite Rules
+ */
+function ogio_flush_rewrite_rules_maybe() {
+	if ( get_option( 'ogio_flush_rewrite_rules_flag' ) ) {
+		flush_rewrite_rules();
+        delete_option( 'ogio_flush_rewrite_rules_flag' );
+    }
+
+}
+
+add_action( 'init', 'ogio_flush_rewrite_rules_maybe', 20 );
+
+/**
+ * Filter Query Var for Open Graph Image
+ */
+function ogio_register_query_var( $vars ) {
+    $vars[] = 'ogio';
+    return $vars;
+}
+
+add_filter( 'query_vars', 'ogio_register_query_var' );
+
+/**
+ * Template for Open Graph Image
+ */
+function ogio_image_template() {
+    if ( get_query_var( 'ogio' ) ) {
+        add_filter( 'template_include', function() {
+            return plugin_dir_path(__DIR__) . 'generate-og-image.php';
+        });
+    }
+}
+
+add_action( 'template_redirect', 'ogio_image_template' );
+
+/**
  * Change Open Graph Image URL for Yoast SEO Plugin
  */
 function change_yoast_opengraph_image_url( $url ) {
     global $post;
-    return $url = plugin_dir_url( __DIR__ ) . 'generate-og-image.php?p=' . $post->ID;
+    return $url = site_url().'/ogio/'.$post->ID;
 }
 
 /**
@@ -101,9 +146,12 @@ function change_yoast_opengraph_image_url( $url ) {
  */
 function change_rankmath_opengraph_image_url( $attachment_url ) {
     global $post;
-    return $attachment_url = plugin_dir_url( __DIR__ ) . 'generate-og-image.php?p=' . $post->ID;
+    return $attachment_url = site_url().'/ogio/'.$post->ID;
 }
 
+/**
+ * Filter SEO Plugin's Open Graph Image URL With Ours
+ */
 if ( get_option( 'ogio_select_seo_plugin' ) ) {
     $seo_plugin = get_option( 'ogio_select_seo_plugin' );
     if ( $seo_plugin == 'yoast' ) {

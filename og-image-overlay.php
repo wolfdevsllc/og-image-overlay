@@ -3,11 +3,11 @@
 Plugin Name: Open Graph Image Overlay
 Plugin URI: https://itsmereal.com/plugins/open-graph-image-overlay
 Description: Add automated image overlay on top of Open Graph images. This plugin extends the Open Graph features from Yoast SEO or Rank Math plugin.
-Version: 1.3
+Version: 1.4
 Author: Al-Mamun Talukder
 Author URI: https://itsmereal.com
 Requires at least: 4.3
-Tested up to: 5.5.1
+Tested up to: 6.0.2
 License: GPLv2 or later
 Text Domain: ogio
 */
@@ -17,7 +17,6 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Include Template Parts
  */
-
 require_once __DIR__ . '/admin/functions.php';
 require_once __DIR__ . '/admin/customizer.php';
 require_once __DIR__ . '/template/config.php';
@@ -27,7 +26,6 @@ require_once __DIR__ . '/template/config.php';
  *	Plugin Update Checker
  *  @source https://github.com/YahnisElsts/plugin-update-checker
  */
-
 require_once __DIR__ . '/includes/update-checker/plugin-update-checker.php';
 
 $imrsmodsUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -39,7 +37,6 @@ $imrsmodsUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 /**
  * Add settings link to plugin actions
  */
-
 function ogio_add_plugin_link ( $links ) {
 	$link = add_query_arg(
         array(
@@ -56,3 +53,15 @@ function ogio_add_plugin_link ( $links ) {
 }
 
 add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'ogio_add_plugin_link' );
+
+
+/**
+ * Add a flag that will allow to flush the rewrite rules when needed.
+ */
+function ogio_activate() {
+    if ( ! get_option( 'ogio_flush_rewrite_rules_flag' ) ) {
+        add_option( 'ogio_flush_rewrite_rules_flag', true );
+    }
+}
+
+register_activation_hook( __FILE__, 'ogio_activate' );
