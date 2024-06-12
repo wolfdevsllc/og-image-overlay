@@ -99,6 +99,28 @@ function ogio_customizer_fields( $wp_customize ) {
         ),
     ) ) );
 
+    $wp_customize->add_setting('ogio_image_source', array(
+        'default'   => 'default',
+        'transport' => 'refresh',
+        'type'       => 'option',
+    ) );
+
+    $wp_customize->add_control( new WP_Customize_Control( $wp_customize, 'ogio_image_source', array(
+        'label'       => __('Image Source', 'ogio'),
+        'description' => __( 'Select the image source for the Open Graph Image. You can use the image set under "Social" tab on your Yoast SEO settings.', 'ogio' ),
+        'section'     => 'ogio_settings',
+        'settings'    => 'ogio_image_source',
+        'type'        => 'radio',
+        'choices'     => array(
+            'default' => 'Default - use the featured image',
+            'yoast-fb'=> 'Yoast SEO - Facebook Image',
+            'yoast-x' => 'Yoast SEO - X Image',
+        ),
+        'active_callback' => function() use ( $wp_customize ) {
+            return $wp_customize->get_setting( 'ogio_select_seo_plugin' )->value() == 'yoast';
+        },
+    ) ) );
+
     $wp_customize->add_setting( 'ogio_plugin_compatibility_notice', array() );
     $wp_customize->add_control(new Info_Custom_control($wp_customize,  'ogio_plugin_compatibility_notice', array(
         'label'       => __('This plugin works automatically along with either Yoast SEO or Rank Math SEO plugin. If you are not using any one of them, you will need to manually set the generated Open Graph Image.', 'ogio'),

@@ -49,13 +49,23 @@ function generate_og_image( $post_id ) {
 
     } else {
 
-        if ( get_post_thumbnail_id( $post_id ) ) {
-            $featured_image = get_post_thumbnail_id( $post_id );
+        $image_source = get_option( 'ogio_image_source' );
+
+        if ( $image_source == 'yoast-fb' || $image_source == 'yoast-x' ) {
+            if ( $image_source == 'yoast-fb' ) {
+                $featured_image = get_post_meta( $post_id, '_yoast_wpseo_opengraph-image-id', true ) ?: get_post_thumbnail_id( $post_id );
+            } elseif ( $image_source == 'yoast-x' ) {
+                $featured_image = get_post_meta( $post_id, '_yoast_wpseo_twitter-image-id', true ) ?: get_post_thumbnail_id( $post_id );
+            }
         } else {
-            if ( get_option( 'ogio_fallback_image' ) ) {
-                $featured_image = get_option( 'ogio_fallback_image' );
+            if ( get_post_thumbnail_id( $post_id ) ) {
+                $featured_image = get_post_thumbnail_id( $post_id );
             } else {
-                wp_die( 'Please correctly configure the Open Graph Image Overlay settings.' );
+                if ( get_option( 'ogio_fallback_image' ) ) {
+                    $featured_image = get_option( 'ogio_fallback_image' );
+                } else {
+                    wp_die( 'Please correctly configure the Open Graph Image Overlay settings.' );
+                }
             }
         }
 

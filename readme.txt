@@ -3,7 +3,7 @@ Contributors: realblackz
 Donate link: https://itsmereal.com
 Tags: media
 Requires at least: 4.3
-Tested up to: 6.0.2
+Tested up to: 6.5.4
 Stable tag:
 Requires PHP: 5.4
 License: GPLv2 or later
@@ -38,6 +38,10 @@ Install and activate the plugin. Got to Settings > OG Image Overlay and update t
 If you are not using one of them but still want to use overlay image on top of your open graph images, you can manually set the link. You can get the generated URL to use from the plugin settings page (look at the right side preview with instructions).
 
 == Changelog ==
+
+= 1.5 =
+* 2024-06-12
+* Added option to use Yoast Social Image (Facebook or X) as source image for the open graph image.
 
 = 1.4 =
 * 2022-09-29
