@@ -47,7 +47,7 @@ This plugin currently works alongside with two popular SEO plugins.
   ![Sample Output](https://itsmereal.com/wp-content/uploads/2022/10/ogio-link-preview.png)
 
 - **I already have a different sized featured image dimension for my featured size, how do I change it?**\
-  You will need to replace your uploaded images if you want to use the recommended 1200 x 630 pixels dimention or a new dimention that you want to use for all your uploads in future. You can replace your current media files with a handy plugin called [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/).
+  You will need to replace your uploaded images if you want to use the recommended 1200 x 630 pixels dimension or a new dimension that you want to use for all your uploads in future. You can replace your current media files with a handy plugin called [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/).
 
 ## License
 
