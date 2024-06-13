@@ -46,7 +46,7 @@ This plugin currently works alongside with two popular SEO plugins.
   X value is for the X axis and Y value is for the Y axis of the final image. You have to carefully measure the width and height and set the correct values. The preview shown on the plugin settings page can be wrong if not used properly (the recommended 1200px by 630px). So, always test your output image first. You can easily check for the generated image url from page source. Here is an example output.\
   ![Sample Output](https://itsmereal.com/wp-content/uploads/2022/10/ogio-link-preview.png)
 
-- **I already have a different sized featured image dimention for my featured size, how do I change it?**\
+- **I already have a different sized featured image dimension for my featured size, how do I change it?**\
   You will need to replace your uploaded images if you want to use the recommended 1200 x 630 pixels dimention or a new dimention that you want to use for all your uploads in future. You can replace your current media files with a handy plugin called [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/).
 
 ## License
