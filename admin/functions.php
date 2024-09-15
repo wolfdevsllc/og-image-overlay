@@ -109,7 +109,7 @@ function generate_og_image( $post_id ) {
         flush();
 
         // Check which image output format is selected
-        $image_output_format = get_option( 'ogio_image_output_format' );
+        $image_output_format = get_option( 'ogio_image_output_format', 'image/jpeg' );
         $image_output_quality = get_option( 'ogio_image_output_quality', 75 );
 
         if ( $image_output_format == 'image/webp' ) {
