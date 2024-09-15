@@ -121,6 +121,44 @@ function ogio_customizer_fields( $wp_customize ) {
         },
     ) ) );
 
+    $wp_customize->add_setting( 'ogio_image_output_format', array(
+        'default'   => 'image/jpeg',
+        'transport' => 'refresh',
+        'type'      => 'option',
+    ) );
+
+    $wp_customize->add_control( new WP_Customize_Control( $wp_customize, 'ogio_image_output_format', array(
+        'label'       => __('OG Image Output Format', 'ogio'),
+        'description' => __( 'Select the image output format for the Open Graph Image. You may choose WebP format for smaller image size and better compatibility on messaging apps. Note: Not all platforms/apps support WebP format. Test on your target platforms/apps to see if it works.', 'ogio' ),
+        'section'     => 'ogio_settings',
+        'settings'    => 'ogio_image_output_format',
+        'type'        => 'radio',
+        'choices'     => array(
+            'image/jpeg' => 'JPEG',
+            'image/png'  => 'PNG',
+            'image/webp' => 'WebP',
+        ),
+    ) ) );
+
+    $wp_customize->add_setting( 'ogio_image_output_quality', array(
+        'default'   => 75,
+        'transport' => 'refresh',
+        'type'      => 'option',
+    ) );
+
+    $wp_customize->add_control( new WP_Customize_Control( $wp_customize, 'ogio_image_output_quality', array(
+        'label'       => __('OG Image Output Quality', 'ogio'),
+        'description' => __( 'Select the image output quality for the Open Graph Image. This option can also help you to reduce the image size for better compatibility on messaging apps.', 'ogio' ),
+        'section'     => 'ogio_settings',
+        'settings'    => 'ogio_image_output_quality',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min'     => 0,
+            'max'     => 100,
+            'step'    => 1,
+        ),
+    ) ) );
+
     $wp_customize->add_setting( 'ogio_plugin_compatibility_notice', array() );
     $wp_customize->add_control(new Info_Custom_control($wp_customize,  'ogio_plugin_compatibility_notice', array(
         'label'       => __('This plugin works automatically along with either Yoast SEO or Rank Math SEO plugin. If you are not using any one of them, you will need to manually set the generated Open Graph Image.', 'ogio'),

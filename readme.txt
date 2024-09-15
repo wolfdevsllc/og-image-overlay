@@ -39,9 +39,14 @@ If you are not using one of them but still want to use overlay image on top of y
 
 == Changelog ==
 
+= 1.6 =
+* 2024-09-15
+* Better error handling for unsupported media formats
+* Added option for output format & quality
+
 = 1.5 =
 * 2024-06-12
-* Added option to use Yoast Social Image (Facebook or X) as source image for the open graph image.
+* Added option to use Yoast Social Image (Facebook or X) as source image for the open graph image
 
 = 1.4 =
 * 2022-09-29

@@ -42,15 +42,10 @@ add_filter( 'template_include', 'ogio_preview_template', 30000 );
  * @param integer post ID
  */
 function generate_og_image( $post_id ) {
-
     if ( ! $post_id ) {
-
         wp_die( 'Please correctly configure the Open Graph Image Overlay settings.' );
-
     } else {
-
         $image_source = get_option( 'ogio_image_source' );
-
         if ( $image_source == 'yoast-fb' || $image_source == 'yoast-x' ) {
             if ( $image_source == 'yoast-fb' ) {
                 $featured_image = get_post_meta( $post_id, '_yoast_wpseo_opengraph-image-id', true ) ?: get_post_thumbnail_id( $post_id );
@@ -68,31 +63,67 @@ function generate_og_image( $post_id ) {
                 }
             }
         }
-
         if ( get_option( 'ogio_overlay_image' ) ) {
             $overlay_image  = get_option( 'ogio_overlay_image' );
         } else {
             wp_die( 'Please correctly configure the Open Graph Image Overlay settings.' );
         }
-
         $overlay_x      = get_option( 'ogio_overlay_position_x' );
         $overlay_y      = get_option( 'ogio_overlay_position_y' );
-
         $overlay_type   = get_post_mime_type( $overlay_image );
-
         $overlay_image_meta = wp_get_attachment_image_src( $overlay_image , 'full' );
-        $overlay_width  = $overlay_image_meta['1'];
-        $overlay_height = $overlay_image_meta['2'];
+        $overlay_width  = $overlay_image_meta[1];
+        $overlay_height = $overlay_image_meta[2];
 
-        $ogImage  = imagecreatefromjpeg( get_attached_file( $featured_image ) );
+        // Handle different image formats for featured image
+        $featured_image_path = get_attached_file( $featured_image );
+        $featured_image_type = wp_check_filetype( $featured_image_path )['type'];
+
+        switch ( $featured_image_type ) {
+            case 'image/jpeg':
+                $ogImage = imagecreatefromjpeg( $featured_image_path );
+                break;
+            case 'image/png':
+                $ogImage = imagecreatefrompng( $featured_image_path );
+                break;
+            case 'image/webp':
+                $ogImage = imagecreatefromwebp( $featured_image_path );
+                break;
+            default:
+                wp_die( 'Unsupported image format for featured image. Please use a JPEG, PNG, or WebP image.' );
+        }
+
         if ( $overlay_type == 'image/jpeg' ) {
             $addition = imagecreatefromjpeg( get_attached_file( $overlay_image ) );
         } elseif ( $overlay_type == 'image/png' ) {
             $addition = imagecreatefrompng( get_attached_file( $overlay_image ) );
+        } elseif ( $overlay_type == 'image/webp' ) {
+            $addition = imagecreatefromwebp( get_attached_file( $overlay_image ) );
+        } else {
+            wp_die( 'Unsupported image format for overlay image. Please use a JPEG, PNG, or WebP image.' );
         }
         imagecopy( $ogImage, $addition, $overlay_x, $overlay_y, 0, 0, $overlay_width, $overlay_height );
-        header('Content-Type: image/png');
-        imagepng( $ogImage );
+
+        // Clear output buffer to prevent unwanted output
+        ob_clean();
+        flush();
+
+        // Check which image output format is selected
+        $image_output_format = get_option( 'ogio_image_output_format' );
+        $image_output_quality = get_option( 'ogio_image_output_quality', 75 );
+
+        if ( $image_output_format == 'image/webp' ) {
+            header('Content-Type: image/webp');
+            imagewebp( $ogImage, null, $image_output_quality );
+        } elseif ( $image_output_format == 'image/png' ) {
+            header('Content-Type: image/png');
+            imagepng( $ogImage, null, 9 - round(($image_output_quality / 100) * 9) );
+        } elseif ( $image_output_format == 'image/jpeg' ) {
+            header('Content-Type: image/jpeg');
+            imagejpeg( $ogImage, null, $image_output_quality );
+        }
+
+        // Clean up the image resources
         imagedestroy($ogImage);
         imagedestroy($addition);
     }

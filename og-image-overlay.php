@@ -3,11 +3,11 @@
 Plugin Name: Open Graph Image Overlay
 Plugin URI: https://itsmereal.com/plugins/open-graph-image-overlay
 Description: Add automated image overlay on top of Open Graph images. This plugin extends the Open Graph features from Yoast SEO or Rank Math plugin.
-Version: 1.5
+Version: 1.6
 Author: Al-Mamun Talukder
 Author URI: https://itsmereal.com
 Requires at least: 4.3
-Tested up to: 6.5.4
+Tested up to: 6.6.2
 License: GPLv2 or later
 Text Domain: ogio
 */
@@ -20,7 +20,6 @@ defined( 'ABSPATH' ) || exit;
 require_once __DIR__ . '/admin/functions.php';
 require_once __DIR__ . '/admin/customizer.php';
 require_once __DIR__ . '/template/config.php';
-
 
 /**
  *	Plugin Update Checker
