@@ -3,7 +3,7 @@ Contributors: realblackz
 Donate link: https://itsmereal.com
 Tags: media
 Requires at least: 4.3
-Tested up to: 6.5.4
+Tested up to: 6.6.2
 Stable tag:
 Requires PHP: 5.4
 License: GPLv2 or later
