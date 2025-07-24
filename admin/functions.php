@@ -242,8 +242,8 @@ function ogio_get_featured_image_id( $post_id, $image_source ) {
 }
 
 /**
- * Prepare and validate image data for processing
- * Security Fix: Comprehensive file validation and path security
+ * Prepare and validate image data for processing with enhanced security
+ * Security Fix: File size limits, memory estimation, and comprehensive validation
  *
  * @param int $featured_image_id Featured image attachment ID
  * @param array $config Validated configuration array
@@ -252,56 +252,247 @@ function ogio_get_featured_image_id( $post_id, $image_source ) {
 function ogio_prepare_image_data( $featured_image_id, $config ) {
     $image_data = array();
 
-    // Get and validate featured image path
-    $featured_image_path = get_attached_file( $featured_image_id );
-    if ( ! $featured_image_path || ! file_exists( $featured_image_path ) ) {
-        return new WP_Error( 'missing_featured_image', 'Featured image file not found' );
+        // Validate featured image with comprehensive security checks
+    $featured_validation = ogio_validate_image_file( $featured_image_id, 'featured' );
+    if ( is_wp_error( $featured_validation ) ) {
+        return $featured_validation;
     }
 
-    // Validate featured image type
-    $featured_image_type = wp_check_filetype( $featured_image_path );
-    if ( ! in_array( $featured_image_type['type'], array( 'image/jpeg', 'image/png', 'image/webp' ), true ) ) {
-        return new WP_Error( 'unsupported_featured_format', 'Unsupported featured image format' );
+    // Add featured data with proper prefixes
+    foreach ( $featured_validation as $key => $value ) {
+        $image_data[ 'featured_' . $key ] = $value;
     }
 
-    $image_data['featured_path'] = $featured_image_path;
-    $image_data['featured_type'] = $featured_image_type['type'];
-
-    // Get and validate overlay image path
-    $overlay_image_path = get_attached_file( $config['overlay_image_id'] );
-    if ( ! $overlay_image_path || ! file_exists( $overlay_image_path ) ) {
-        return new WP_Error( 'missing_overlay_image', 'Overlay image file not found' );
+    // Validate overlay image with comprehensive security checks
+    $overlay_validation = ogio_validate_image_file( $config['overlay_image_id'], 'overlay' );
+    if ( is_wp_error( $overlay_validation ) ) {
+        return $overlay_validation;
     }
 
-    // Validate overlay image type
-    $overlay_image_type = wp_check_filetype( $overlay_image_path );
-    if ( ! in_array( $overlay_image_type['type'], array( 'image/jpeg', 'image/png', 'image/webp' ), true ) ) {
-        return new WP_Error( 'unsupported_overlay_format', 'Unsupported overlay image format' );
+    // Add overlay data with proper prefixes
+    foreach ( $overlay_validation as $key => $value ) {
+        $image_data[ 'overlay_' . $key ] = $value;
     }
 
-    $image_data['overlay_path'] = $overlay_image_path;
-    $image_data['overlay_type'] = $overlay_image_type['type'];
-
-    // Get overlay image dimensions
-    $overlay_meta = wp_get_attachment_image_src( $config['overlay_image_id'], 'full' );
-    if ( ! $overlay_meta || ! isset( $overlay_meta[1], $overlay_meta[2] ) ) {
-        return new WP_Error( 'invalid_overlay_meta', 'Could not get overlay image dimensions' );
+    // Calculate total memory requirements
+    $memory_check = ogio_check_memory_requirements( $image_data );
+    if ( is_wp_error( $memory_check ) ) {
+        return $memory_check;
     }
 
-    $image_data['overlay_width'] = absint( $overlay_meta[1] );
-    $image_data['overlay_height'] = absint( $overlay_meta[2] );
-
-    // Validate dimensions are reasonable
-    if ( $image_data['overlay_width'] > 3000 || $image_data['overlay_height'] > 3000 ) {
-        return new WP_Error( 'overlay_too_large', 'Overlay image dimensions too large' );
+    // Validate overlay positioning doesn't exceed base image bounds
+    $positioning_check = ogio_validate_overlay_positioning( $image_data, $config );
+    if ( is_wp_error( $positioning_check ) ) {
+        return $positioning_check;
     }
 
     return $image_data;
 }
 
 /**
- * Process images and output the result with proper error handling
- * Security Fix: Safe image processing with resource management and error handling
+ * Comprehensive image file validation with security checks
+ * Security Fix: File size limits, content validation, and malicious file detection
+ *
+ * @param int $attachment_id WordPress attachment ID
+ * @param string $type Image type (featured/overlay) for error context
+ * @return array|WP_Error Validated image data or error
+ */
+function ogio_validate_image_file( $attachment_id, $type = 'image' ) {
+    // Get file path
+    $file_path = get_attached_file( $attachment_id );
+    if ( ! $file_path || ! file_exists( $file_path ) ) {
+        return new WP_Error( "missing_{$type}_file", "{$type} image file not found" );
+    }
+
+    // Security: Validate file path is within uploads directory
+    $upload_dir = wp_upload_dir();
+    $upload_basedir = wp_normalize_path( $upload_dir['basedir'] );
+    $file_path_normalized = wp_normalize_path( $file_path );
+
+    if ( strpos( $file_path_normalized, $upload_basedir ) !== 0 ) {
+        return new WP_Error( "invalid_{$type}_path", "{$type} image path is outside uploads directory" );
+    }
+
+    // Check file size limits (default: 10MB max)
+    $max_file_size = apply_filters( 'ogio_max_file_size', 10 * 1024 * 1024 ); // 10MB
+    $file_size = filesize( $file_path );
+
+    if ( $file_size === false ) {
+        return new WP_Error( "cannot_read_{$type}_size", "Cannot read {$type} image file size" );
+    }
+
+    if ( $file_size > $max_file_size ) {
+        return new WP_Error( "{$type}_too_large", "{$type} image file too large (max: " . size_format( $max_file_size ) . ")" );
+    }
+
+    // Validate MIME type from file extension
+    $file_type = wp_check_filetype( $file_path );
+    $allowed_types = array( 'image/jpeg', 'image/png', 'image/webp' );
+
+    if ( ! in_array( $file_type['type'], $allowed_types, true ) ) {
+        return new WP_Error( "unsupported_{$type}_format", "Unsupported {$type} image format: {$file_type['type']}" );
+    }
+
+    // Security: Validate actual file content matches MIME type
+    $content_validation = ogio_validate_image_content( $file_path, $file_type['type'] );
+    if ( is_wp_error( $content_validation ) ) {
+        return new WP_Error( "invalid_{$type}_content", "Invalid {$type} image content: " . $content_validation->get_error_message() );
+    }
+
+    // Get and validate image dimensions
+    $image_info = getimagesize( $file_path );
+    if ( $image_info === false ) {
+        return new WP_Error( "invalid_{$type}_dimensions", "Cannot read {$type} image dimensions" );
+    }
+
+    list( $width, $height, $image_type ) = $image_info;
+
+    // Validate dimensions are reasonable (prevent memory exhaustion)
+    $max_width = apply_filters( 'ogio_max_image_width', 4000 );
+    $max_height = apply_filters( 'ogio_max_image_height', 4000 );
+
+    if ( $width > $max_width || $height > $max_height ) {
+        return new WP_Error( "{$type}_dimensions_too_large", "{$type} image dimensions too large (max: {$max_width}x{$max_height})" );
+    }
+
+    // Validate minimum dimensions
+    $min_width = apply_filters( 'ogio_min_image_width', 50 );
+    $min_height = apply_filters( 'ogio_min_image_height', 50 );
+
+    if ( $width < $min_width || $height < $min_height ) {
+        return new WP_Error( "{$type}_dimensions_too_small", "{$type} image dimensions too small (min: {$min_width}x{$min_height})" );
+    }
+
+    // Calculate estimated memory usage
+    $channels = isset( $image_info['channels'] ) ? $image_info['channels'] : 3;
+    $bits = isset( $image_info['bits'] ) ? $image_info['bits'] : 8;
+    $memory_estimate = ( $width * $height * $channels * $bits / 8 ) * 2; // *2 for safety margin
+
+    return array(
+        'path' => $file_path,
+        'type' => $file_type['type'],
+        'width' => $width,
+        'height' => $height,
+        'size' => $file_size,
+        'memory' => $memory_estimate,
+        'image_type' => $image_type,
+    );
+}
+
+/**
+ * Validate image file content matches declared MIME type
+ * Security Fix: Prevent malicious files disguised as images
+ *
+ * @param string $file_path Path to image file
+ * @param string $expected_mime Expected MIME type
+ * @return true|WP_Error True if valid, error if invalid
+ */
+function ogio_validate_image_content( $file_path, $expected_mime ) {
+    // Read first few bytes to check file signature
+    $file_handle = fopen( $file_path, 'rb' );
+    if ( ! $file_handle ) {
+        return new WP_Error( 'cannot_read_file', 'Cannot read image file' );
+    }
+
+    $file_header = fread( $file_handle, 12 );
+    fclose( $file_handle );
+
+    if ( $file_header === false ) {
+        return new WP_Error( 'cannot_read_header', 'Cannot read file header' );
+    }
+
+    // Check file signatures against expected MIME types
+    $valid_signature = false;
+
+    switch ( $expected_mime ) {
+        case 'image/jpeg':
+            // JPEG signature: FF D8 FF
+            $valid_signature = ( substr( $file_header, 0, 3 ) === "\xFF\xD8\xFF" );
+            break;
+        case 'image/png':
+            // PNG signature: 89 50 4E 47 0D 0A 1A 0A
+            $valid_signature = ( substr( $file_header, 0, 8 ) === "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A" );
+            break;
+        case 'image/webp':
+            // WebP signature: RIFF....WEBP
+            $valid_signature = ( substr( $file_header, 0, 4 ) === 'RIFF' && substr( $file_header, 8, 4 ) === 'WEBP' );
+            break;
+    }
+
+    if ( ! $valid_signature ) {
+        return new WP_Error( 'invalid_signature', 'File signature does not match declared type' );
+    }
+
+    return true;
+}
+
+/**
+ * Check total memory requirements for image processing
+ * Security Fix: Prevent memory exhaustion attacks
+ *
+ * @param array $image_data Validated image data
+ * @return true|WP_Error True if within limits, error if exceeds
+ */
+function ogio_check_memory_requirements( $image_data ) {
+    // Calculate total memory needed
+    $featured_memory = isset( $image_data['featured_memory'] ) ? $image_data['featured_memory'] : 0;
+    $overlay_memory = isset( $image_data['overlay_memory'] ) ? $image_data['overlay_memory'] : 0;
+    $total_memory_needed = $featured_memory + $overlay_memory;
+
+    // Get current memory limit
+    $memory_limit = wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) );
+    $memory_usage = memory_get_usage( true );
+    $available_memory = $memory_limit - $memory_usage;
+
+    // Apply safety margin (use only 70% of available memory)
+    $safe_memory_limit = $available_memory * 0.7;
+
+    if ( $total_memory_needed > $safe_memory_limit ) {
+        return new WP_Error(
+            'insufficient_memory',
+            sprintf(
+                'Insufficient memory for image processing. Required: %s, Available: %s',
+                size_format( $total_memory_needed ),
+                size_format( $safe_memory_limit )
+            )
+        );
+    }
+
+    return true;
+}
+
+/**
+ * Validate overlay positioning relative to base image
+ * Security Fix: Prevent out-of-bounds overlay positioning
+ *
+ * @param array $image_data Validated image data
+ * @param array $config Plugin configuration
+ * @return true|WP_Error True if valid, error if invalid
+ */
+function ogio_validate_overlay_positioning( $image_data, $config ) {
+    $base_width = $image_data['featured_width'];
+    $base_height = $image_data['featured_height'];
+    $overlay_width = $image_data['overlay_width'];
+    $overlay_height = $image_data['overlay_height'];
+
+    $overlay_x = $config['overlay_x'];
+    $overlay_y = $config['overlay_y'];
+
+    // Check if overlay extends beyond base image boundaries
+    if ( ( $overlay_x + $overlay_width ) > $base_width ) {
+        return new WP_Error( 'overlay_exceeds_width', 'Overlay extends beyond base image width' );
+    }
+
+    if ( ( $overlay_y + $overlay_height ) > $base_height ) {
+        return new WP_Error( 'overlay_exceeds_height', 'Overlay extends beyond base image height' );
+    }
+
+    return true;
+}
+
+/**
+ * Process images and output with enhanced security and resource management
+ * Security Fix: Execution time limits, memory monitoring, and secure GD library usage
  *
  * @param array $image_data Validated image data
  * @param array $config Validated configuration
@@ -310,43 +501,57 @@ function ogio_prepare_image_data( $featured_image_id, $config ) {
 function ogio_process_and_output_image( $image_data, $config ) {
     $og_image = null;
     $overlay_image = null;
+    $start_time = microtime( true );
+    $start_memory = memory_get_usage( true );
 
     try {
-        // Create base image resource
-        switch ( $image_data['featured_type'] ) {
-            case 'image/jpeg':
-                $og_image = imagecreatefromjpeg( $image_data['featured_path'] );
-                break;
-            case 'image/png':
-                $og_image = imagecreatefrompng( $image_data['featured_path'] );
-                break;
-            case 'image/webp':
-                $og_image = imagecreatefromwebp( $image_data['featured_path'] );
-                break;
+        // Security: Set execution time limit for image processing
+        $max_execution_time = apply_filters( 'ogio_max_execution_time', 30 );
+        if ( function_exists( 'set_time_limit' ) ) {
+            @set_time_limit( $max_execution_time );
         }
 
-        if ( ! $og_image ) {
-            return new WP_Error( 'failed_create_base', 'Failed to create base image resource' );
+        // Monitor memory usage throughout processing
+        $memory_monitor = new OGIO_Memory_Monitor( $start_memory );
+
+        // Create base image resource with enhanced error handling
+        $og_image = ogio_create_image_resource( $image_data['featured_path'], $image_data['featured_type'] );
+        if ( is_wp_error( $og_image ) ) {
+            return $og_image;
         }
 
-        // Create overlay image resource
-        switch ( $image_data['overlay_type'] ) {
-            case 'image/jpeg':
-                $overlay_image = imagecreatefromjpeg( $image_data['overlay_path'] );
-                break;
-            case 'image/png':
-                $overlay_image = imagecreatefrompng( $image_data['overlay_path'] );
-                break;
-            case 'image/webp':
-                $overlay_image = imagecreatefromwebp( $image_data['overlay_path'] );
-                break;
+        $memory_monitor->check_memory( 'after base image creation' );
+
+        // Verify base image dimensions match expected
+        $actual_width = imagesx( $og_image );
+        $actual_height = imagesy( $og_image );
+
+        if ( $actual_width !== $image_data['featured_width'] || $actual_height !== $image_data['featured_height'] ) {
+            return new WP_Error( 'dimension_mismatch', 'Base image dimensions do not match metadata' );
         }
 
-        if ( ! $overlay_image ) {
-            return new WP_Error( 'failed_create_overlay', 'Failed to create overlay image resource' );
+        // Create overlay image resource with enhanced error handling
+        $overlay_image = ogio_create_image_resource( $image_data['overlay_path'], $image_data['overlay_type'] );
+        if ( is_wp_error( $overlay_image ) ) {
+            return $overlay_image;
         }
 
-        // Apply overlay
+        $memory_monitor->check_memory( 'after overlay image creation' );
+
+        // Verify overlay image dimensions match expected
+        $overlay_actual_width = imagesx( $overlay_image );
+        $overlay_actual_height = imagesy( $overlay_image );
+
+        if ( $overlay_actual_width !== $image_data['overlay_width'] || $overlay_actual_height !== $image_data['overlay_height'] ) {
+            return new WP_Error( 'overlay_dimension_mismatch', 'Overlay image dimensions do not match metadata' );
+        }
+
+        // Security: Check execution time before heavy processing
+        if ( ( microtime( true ) - $start_time ) > ( $max_execution_time - 5 ) ) {
+            return new WP_Error( 'processing_timeout', 'Image processing taking too long' );
+        }
+
+        // Apply overlay with enhanced error checking
         $copy_result = imagecopy(
             $og_image,
             $overlay_image,
@@ -362,43 +567,228 @@ function ogio_process_and_output_image( $image_data, $config ) {
             return new WP_Error( 'failed_overlay', 'Failed to apply overlay to image' );
         }
 
-        // Clear output buffer and set headers
-        ob_clean();
-        flush();
-        nocache_headers();
-        header( 'Content-Type: ' . $config['output_format'] );
+        $memory_monitor->check_memory( 'after overlay application' );
 
-        // Output image in specified format
-        $output_success = false;
-        switch ( $config['output_format'] ) {
-            case 'image/webp':
-                $output_success = imagewebp( $og_image, null, $config['output_quality'] );
-                break;
-            case 'image/png':
-                $png_quality = 9 - round( ( $config['output_quality'] / 100 ) * 9 );
-                $output_success = imagepng( $og_image, null, $png_quality );
-                break;
-            case 'image/jpeg':
-            default:
-                $output_success = imagejpeg( $og_image, null, $config['output_quality'] );
-                break;
-        }
+        // Clean up overlay resource immediately to free memory
+        imagedestroy( $overlay_image );
+        $overlay_image = null;
 
-        if ( ! $output_success ) {
-            return new WP_Error( 'failed_output', 'Failed to output processed image' );
+        // Prepare for output with security headers
+        $output_result = ogio_output_processed_image( $og_image, $config, $memory_monitor );
+        if ( is_wp_error( $output_result ) ) {
+            return $output_result;
         }
 
         return true;
 
+    } catch ( Exception $e ) {
+        // Log exception for debugging
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'OGIO Exception: ' . $e->getMessage() );
+        }
+        return new WP_Error( 'processing_exception', 'Image processing failed due to exception' );
+
     } finally {
         // Always clean up resources
-        if ( $og_image ) {
+        if ( $og_image && is_resource( $og_image ) ) {
             imagedestroy( $og_image );
         }
-        if ( $overlay_image ) {
+        if ( $overlay_image && is_resource( $overlay_image ) ) {
             imagedestroy( $overlay_image );
         }
+
+        // Log processing time for monitoring
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            $processing_time = microtime( true ) - $start_time;
+            $memory_used = memory_get_usage( true ) - $start_memory;
+            error_log( sprintf( 'OGIO Processing: %.2fs, Memory: %s', $processing_time, size_format( $memory_used ) ) );
+        }
     }
+}
+
+/**
+ * Create image resource with enhanced error handling and security checks
+ * Security Fix: Safe GD library usage with comprehensive error checking
+ *
+ * @param string $file_path Path to image file
+ * @param string $mime_type MIME type of image
+ * @return resource|WP_Error Image resource or error
+ */
+function ogio_create_image_resource( $file_path, $mime_type ) {
+    // Final security check before processing
+    if ( ! file_exists( $file_path ) || ! is_readable( $file_path ) ) {
+        return new WP_Error( 'file_not_accessible', 'Image file not accessible' );
+    }
+
+    // Turn off error reporting for GD functions to prevent information disclosure
+    $old_error_reporting = error_reporting( 0 );
+
+    try {
+        $image_resource = false;
+
+        switch ( $mime_type ) {
+            case 'image/jpeg':
+                $image_resource = imagecreatefromjpeg( $file_path );
+                break;
+            case 'image/png':
+                $image_resource = imagecreatefrompng( $file_path );
+                break;
+            case 'image/webp':
+                if ( function_exists( 'imagecreatefromwebp' ) ) {
+                    $image_resource = imagecreatefromwebp( $file_path );
+                } else {
+                    return new WP_Error( 'webp_not_supported', 'WebP format not supported on this server' );
+                }
+                break;
+            default:
+                return new WP_Error( 'unsupported_format', 'Unsupported image format: ' . $mime_type );
+        }
+
+        if ( ! $image_resource || ! is_resource( $image_resource ) ) {
+            return new WP_Error( 'gd_creation_failed', 'GD library failed to create image resource' );
+        }
+
+        return $image_resource;
+
+    } finally {
+        // Restore error reporting
+        error_reporting( $old_error_reporting );
+    }
+}
+
+/**
+ * Output processed image with security headers and compression optimization
+ * Security Fix: Secure headers and output validation
+ *
+ * @param resource $image_resource GD image resource
+ * @param array $config Plugin configuration
+ * @param OGIO_Memory_Monitor $memory_monitor Memory monitoring instance
+ * @return true|WP_Error Success or error
+ */
+function ogio_output_processed_image( $image_resource, $config, $memory_monitor ) {
+    // Clear any previous output and set security headers
+    if ( ob_get_level() ) {
+        ob_clean();
+    }
+
+    // Security headers
+    nocache_headers();
+    header( 'X-Content-Type-Options: nosniff' );
+    header( 'X-Frame-Options: DENY' );
+    header( 'Content-Type: ' . $config['output_format'] );
+
+    // Disable compression for images to avoid double compression
+    if ( function_exists( 'apache_setenv' ) ) {
+        @apache_setenv( 'no-gzip', '1' );
+    }
+
+    // Turn off error reporting for image output
+    $old_error_reporting = error_reporting( 0 );
+
+    try {
+        $output_success = false;
+
+        switch ( $config['output_format'] ) {
+            case 'image/webp':
+                if ( function_exists( 'imagewebp' ) ) {
+                    $output_success = imagewebp( $image_resource, null, $config['output_quality'] );
+                } else {
+                    return new WP_Error( 'webp_output_not_supported', 'WebP output not supported' );
+                }
+                break;
+
+            case 'image/png':
+                // Convert quality (0-100) to PNG compression (0-9)
+                $png_quality = 9 - round( ( $config['output_quality'] / 100 ) * 9 );
+                $png_quality = max( 0, min( 9, $png_quality ) ); // Ensure valid range
+                $output_success = imagepng( $image_resource, null, $png_quality );
+                break;
+
+            case 'image/jpeg':
+            default:
+                $quality = max( 1, min( 100, $config['output_quality'] ) ); // Ensure valid range
+                $output_success = imagejpeg( $image_resource, null, $quality );
+                break;
+        }
+
+        if ( ! $output_success ) {
+            return new WP_Error( 'output_failed', 'Failed to output processed image' );
+        }
+
+        $memory_monitor->check_memory( 'after image output' );
+
+        return true;
+
+    } finally {
+        // Restore error reporting
+        error_reporting( $old_error_reporting );
+    }
+}
+
+/**
+ * Memory monitoring class for image processing
+ * Security Fix: Prevent memory exhaustion during processing
+ */
+class OGIO_Memory_Monitor {
+    private $start_memory;
+    private $max_memory_increase;
+
+    public function __construct( $start_memory ) {
+        $this->start_memory = $start_memory;
+        $this->max_memory_increase = apply_filters( 'ogio_max_memory_increase', 64 * 1024 * 1024 ); // 64MB default
+    }
+
+    public function check_memory( $checkpoint = '' ) {
+        $current_memory = memory_get_usage( true );
+        $memory_increase = $current_memory - $this->start_memory;
+
+        if ( $memory_increase > $this->max_memory_increase ) {
+            throw new Exception( "Memory limit exceeded at {$checkpoint}: " . size_format( $memory_increase ) );
+        }
+
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG && $checkpoint ) {
+            error_log( "OGIO Memory {$checkpoint}: " . size_format( $memory_increase ) );
+        }
+    }
+}
+
+/**
+ * Get centralized security configuration for image processing
+ * Security Fix: Centralized security settings with reasonable defaults
+ *
+ * @return array Security configuration array
+ */
+function ogio_get_security_config() {
+    static $config = null;
+
+    if ( null === $config ) {
+        $config = array(
+            // File size limits
+            'max_file_size' => apply_filters( 'ogio_max_file_size', 10 * 1024 * 1024 ), // 10MB
+            'max_memory_increase' => apply_filters( 'ogio_max_memory_increase', 64 * 1024 * 1024 ), // 64MB
+
+            // Dimension limits
+            'max_image_width' => apply_filters( 'ogio_max_image_width', 4000 ),
+            'max_image_height' => apply_filters( 'ogio_max_image_height', 4000 ),
+            'min_image_width' => apply_filters( 'ogio_min_image_width', 50 ),
+            'min_image_height' => apply_filters( 'ogio_min_image_height', 50 ),
+
+            // Processing limits
+            'max_execution_time' => apply_filters( 'ogio_max_execution_time', 30 ), // 30 seconds
+
+            // Allowed formats
+            'allowed_mime_types' => apply_filters( 'ogio_allowed_mime_types', array(
+                'image/jpeg',
+                'image/png',
+                'image/webp'
+            ) ),
+
+            // Memory safety margin (percentage of available memory to use)
+            'memory_safety_margin' => apply_filters( 'ogio_memory_safety_margin', 0.7 ), // 70%
+        );
+    }
+
+    return $config;
 }
 
 /**
@@ -411,7 +801,7 @@ function ogio_image_rewrite_rule() {
 add_action( 'init', 'ogio_image_rewrite_rule', 10 );
 
 /**
- * Flus Rewrite Rules
+ * Flush Rewrite Rules
  */
 function ogio_flush_rewrite_rules_maybe() {
 	if ( get_option( 'ogio_flush_rewrite_rules_flag' ) ) {
