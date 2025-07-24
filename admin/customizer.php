@@ -1,4 +1,23 @@
 <?php
+/**
+ * OG Image Overlay - WordPress Customizer Integration
+ *
+ * Customizer settings and controls for plugin configuration including
+ * overlay images, positioning, output formats, and SEO plugin integration.
+ *
+ * @package    OG_Image_Overlay
+ * @subpackage Admin
+ * @since      1.0.0
+ * @version    1.6.0
+ * @author     Al-Mamun Talukder
+ * @link       https://itsmereal.com/plugins/open-graph-image-overlay
+ * @license    GPLv2 or later
+ * @copyright  2024 Al-Mamun Talukder
+ *
+ * WordPress Coding Standards: This file follows WordPress PHP coding standards.
+ * Text Domain: ogio
+ * Domain Path: /languages
+ */
 
 defined( 'ABSPATH' ) || exit;
 

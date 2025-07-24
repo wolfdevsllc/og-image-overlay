@@ -15,6 +15,79 @@ Text Domain: ogio
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * Plugin constants
+ */
+define( 'OGIO_VERSION', '1.6' );
+define( 'OGIO_PLUGIN_FILE', __FILE__ );
+define( 'OGIO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'OGIO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'OGIO_TEXT_DOMAIN', 'ogio' );
+
+/**
+ * Load plugin textdomain for internationalization
+ * WordPress Standards Fix: Proper i18n implementation
+ */
+function ogio_load_textdomain() {
+    load_plugin_textdomain(
+        OGIO_TEXT_DOMAIN,
+        false,
+        dirname( plugin_basename( OGIO_PLUGIN_FILE ) ) . '/languages/'
+    );
+}
+add_action( 'plugins_loaded', 'ogio_load_textdomain' );
+
+/**
+ * Plugin initialization
+ * WordPress Standards Fix: Proper plugin structure and hooks
+ */
+function ogio_init() {
+    // Check minimum WordPress version
+    if ( version_compare( get_bloginfo( 'version' ), '4.3', '<' ) ) {
+        add_action( 'admin_notices', 'ogio_wordpress_version_notice' );
+        return;
+    }
+
+    // Check required PHP extensions
+    if ( ! extension_loaded( 'gd' ) ) {
+        add_action( 'admin_notices', 'ogio_gd_extension_notice' );
+        return;
+    }
+
+    // Plugin is ready to load
+    do_action( 'ogio_loaded' );
+}
+add_action( 'init', 'ogio_init' );
+
+/**
+ * WordPress version compatibility notice
+ * WordPress Standards Fix: Proper admin notices
+ */
+function ogio_wordpress_version_notice() {
+    $message = sprintf(
+        /* translators: %1$s: Plugin name, %2$s: Required WordPress version */
+        __( '%1$s requires WordPress version %2$s or higher. Please update WordPress.', 'ogio' ),
+        '<strong>' . __( 'OG Image Overlay', 'ogio' ) . '</strong>',
+        '4.3'
+    );
+
+    printf( '<div class="notice notice-error"><p>%s</p></div>', wp_kses_post( $message ) );
+}
+
+/**
+ * GD extension notice
+ * WordPress Standards Fix: Proper admin notices
+ */
+function ogio_gd_extension_notice() {
+    $message = sprintf(
+        /* translators: %s: Plugin name */
+        __( '%s requires the GD PHP extension to be installed. Please contact your hosting provider.', 'ogio' ),
+        '<strong>' . __( 'OG Image Overlay', 'ogio' ) . '</strong>'
+    );
+
+    printf( '<div class="notice notice-error"><p>%s</p></div>', wp_kses_post( $message ) );
+}
+
+/**
  * Include Template Parts
  */
 require_once __DIR__ . '/admin/functions.php';
@@ -46,7 +119,7 @@ function ogio_add_plugin_link ( $links ) {
         'customize.php?autofocus[section]=ogio_settings'
     );
     $settings_link = array(
-        '<a href="' . admin_url( $link ) . '">Settings</a>',
+        '<a href="' . esc_url( admin_url( $link ) ) . '">' . esc_html__( 'Settings', OGIO_TEXT_DOMAIN ) . '</a>',
     );
     return array_merge( $links, $settings_link );
 }
@@ -55,11 +128,38 @@ add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'ogio_add_plugin
 
 
 /**
- * Add a flag that will allow to flush the rewrite rules when needed.
+ * Plugin Activation Hook
+ * WordPress Standards Fix: Proper activation handling with default options
  */
 function ogio_activate() {
+    // Set flag to flush rewrite rules on next init
     if ( ! get_option( 'ogio_flush_rewrite_rules_flag' ) ) {
         add_option( 'ogio_flush_rewrite_rules_flag', true );
+    }
+
+    // Set default options if they don't exist
+    if ( false === get_option( 'ogio_image_output_format' ) ) {
+        add_option( 'ogio_image_output_format', 'image/jpeg' );
+    }
+
+    if ( false === get_option( 'ogio_image_output_quality' ) ) {
+        add_option( 'ogio_image_output_quality', 75 );
+    }
+
+    if ( false === get_option( 'ogio_select_seo_plugin' ) ) {
+        add_option( 'ogio_select_seo_plugin', 'other' );
+    }
+
+    if ( false === get_option( 'ogio_image_source' ) ) {
+        add_option( 'ogio_image_source', 'default' );
+    }
+
+    if ( false === get_option( 'ogio_overlay_position_x' ) ) {
+        add_option( 'ogio_overlay_position_x', 0 );
+    }
+
+    if ( false === get_option( 'ogio_overlay_position_y' ) ) {
+        add_option( 'ogio_overlay_position_y', 0 );
     }
 }
 

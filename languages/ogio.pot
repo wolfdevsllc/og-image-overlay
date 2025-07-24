@@ -1,0 +1,53 @@
+# Copyright (C) 2024 Al-Mamun Talukder
+# This file is distributed under the GPLv2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: OG Image Overlay 1.6.0\n"
+"Report-Msgid-Bugs-To: https://itsmereal.com/plugins/open-graph-image-overlay\n"
+"POT-Creation-Date: 2024-01-01 00:00:00+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: WordPress Plugin Boilerplate\n"
+"X-Domain: ogio\n"
+
+#. Plugin Name of the plugin
+msgid "Open Graph Image Overlay"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://itsmereal.com/plugins/open-graph-image-overlay"
+msgstr ""
+
+#. Description of the plugin
+msgid "Add automated image overlay on top of Open Graph images. This plugin extends the Open Graph features from Yoast SEO or Rank Math plugin."
+msgstr ""
+
+#. Author of the plugin
+msgid "Al-Mamun Talukder"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://itsmereal.com"
+msgstr ""
+
+# WordPress version requirement notice
+#: og-image-overlay.php:47
+#, php-format
+msgid "%1$s requires WordPress version %2$s or higher. Please update WordPress."
+msgstr ""
+
+# GD extension requirement notice
+#: og-image-overlay.php:58
+#, php-format
+msgid "%s requires the GD PHP extension to be installed. Please contact your hosting provider."
+msgstr ""
+
+# Note: This is a template file.
+# Actual translation strings will be extracted during the build process
+# using standard WordPress i18n tools like wp-cli or Poedit.

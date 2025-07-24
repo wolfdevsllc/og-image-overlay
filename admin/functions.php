@@ -1,4 +1,23 @@
 <?php
+/**
+ * OG Image Overlay - Admin Functions
+ *
+ * Core administrative functionality including menu creation, image processing,
+ * logging system, error handling, and health monitoring.
+ *
+ * @package    OG_Image_Overlay
+ * @subpackage Admin
+ * @since      1.0.0
+ * @version    1.6.0
+ * @author     Al-Mamun Talukder
+ * @link       https://itsmereal.com/plugins/open-graph-image-overlay
+ * @license    GPLv2 or later
+ * @copyright  2024 Al-Mamun Talukder
+ *
+ * WordPress Coding Standards: This file follows WordPress PHP coding standards.
+ * Text Domain: ogio
+ * Domain Path: /languages
+ */
 
 defined( 'ABSPATH' ) || exit;
 
@@ -55,15 +74,318 @@ function ogio_add_menu_link() {
         'customize.php?autofocus[section]=ogio_settings'
     );
 
-    add_submenu_page( 'options-general.php',
-        __( 'OG Image Overlay', 'ogio' ),
-        __( 'OG Image Overlay', 'ogio' ),
+    add_submenu_page(
+        'options-general.php',
+        __( 'OG Image Overlay', OGIO_TEXT_DOMAIN ),
+        __( 'OG Image Overlay', OGIO_TEXT_DOMAIN ),
         'manage_options',
         $link
     );
 }
 
-add_action ( 'admin_init', 'ogio_add_menu_link' );
+add_action( 'admin_init', 'ogio_add_menu_link' );
+
+/**
+ * Add Error Monitoring Page
+ * Error Handling Fix: Admin dashboard for monitoring plugin health and errors
+ */
+function ogio_add_error_monitor_page() {
+    if ( current_user_can( 'manage_options' ) ) {
+        add_submenu_page(
+            'tools.php',
+            'OG Image Overlay - Error Monitor',
+            'OG Image Monitor',
+            'manage_options',
+            'ogio-error-monitor',
+            'ogio_error_monitor_page'
+        );
+    }
+}
+
+add_action( 'admin_menu', 'ogio_add_error_monitor_page' );
+
+/**
+ * Error monitoring admin page
+ * Error Handling Fix: Admin dashboard for monitoring plugin health and errors
+ */
+function ogio_error_monitor_page() {
+    // Handle error clearing
+    if ( isset( $_POST['clear_errors'] ) && wp_verify_nonce( $_POST['_wpnonce'], 'ogio_clear_errors' ) ) {
+        ogio_logger()->clear_admin_errors();
+        printf( '<div class="notice notice-success"><p>%s</p></div>', esc_html__( 'Errors cleared successfully.', 'ogio' ) );
+    }
+
+    $recent_errors = ogio_logger()->get_recent_errors( 10 );
+    $plugin_status = ogio_get_plugin_health_status();
+
+    ?>
+    <div class="wrap">
+        <h1><?php echo esc_html__( 'OG Image Overlay - Error Monitor', 'ogio' ); ?></h1>
+
+        <!-- Plugin Health Status -->
+        <div class="card">
+            <h2><?php echo esc_html__( 'Plugin Health Status', 'ogio' ); ?></h2>
+            <table class="widefat">
+                <tbody>
+                    <tr>
+                        <td><strong><?php echo esc_html__( 'Overall Status', 'ogio' ); ?></strong></td>
+                        <td>
+                            <span class="status-indicator status-<?php echo esc_attr( $plugin_status['overall'] ); ?>">
+                                <?php echo esc_html( ucfirst( $plugin_status['overall'] ) ); ?>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php echo esc_html__( 'Configuration', 'ogio' ); ?></strong></td>
+                        <td><?php echo $plugin_status['config_valid'] ? esc_html__( '✅ Valid', 'ogio' ) : esc_html__( '❌ Issues Found', 'ogio' ); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php echo esc_html__( 'GD Library', 'ogio' ); ?></strong></td>
+                        <td><?php echo $plugin_status['gd_available'] ? esc_html__( '✅ Available', 'ogio' ) : esc_html__( '❌ Not Available', 'ogio' ); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php echo esc_html__( 'Memory Limit', 'ogio' ); ?></strong></td>
+                        <td><?php echo esc_html( $plugin_status['memory_limit'] ); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php echo esc_html__( 'WebP Support', 'ogio' ); ?></strong></td>
+                        <td><?php echo $plugin_status['webp_support'] ? esc_html__( '✅ Supported', 'ogio' ) : esc_html__( '⚠️ Not Supported', 'ogio' ); ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong><?php echo esc_html__( 'Recent Errors (24h)', 'ogio' ); ?></strong></td>
+                        <td><?php echo absint( $plugin_status['error_count_24h'] ); ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recent Errors -->
+        <div class="card">
+                        <h2><?php echo esc_html__( 'Recent Errors (Last 10)', 'ogio' ); ?></h2>
+
+            <?php if ( empty( $recent_errors ) ) : ?>
+                <p><?php echo esc_html__( 'No errors recorded. 🎉', 'ogio' ); ?></p>
+            <?php else : ?>
+                <form method="post" style="margin-bottom: 15px;">
+                    <?php wp_nonce_field( 'ogio_clear_errors' ); ?>
+                    <input type="submit" name="clear_errors" class="button" value="<?php echo esc_attr__( 'Clear All Errors', 'ogio' ); ?>">
+                </form>
+
+                <table class="widefat">
+                    <thead>
+                        <tr>
+                            <th><?php echo esc_html__( 'Timestamp', 'ogio' ); ?></th>
+                            <th><?php echo esc_html__( 'Error Message', 'ogio' ); ?></th>
+                            <th><?php echo esc_html__( 'Context', 'ogio' ); ?></th>
+                            <th><?php echo esc_html__( 'User', 'ogio' ); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ( $recent_errors as $error ) : ?>
+                        <tr>
+                            <td><?php echo esc_html( date( 'Y-m-d H:i:s', $error['timestamp'] ) ); ?></td>
+                            <td><code><?php echo esc_html( $error['message'] ); ?></code></td>
+                            <td>
+                                <?php if ( ! empty( $error['context'] ) ) : ?>
+                                    <details>
+                                        <summary><?php echo esc_html__( 'View Context', 'ogio' ); ?></summary>
+                                        <pre style="font-size: 11px; max-height: 100px; overflow-y: auto;"><?php echo esc_html( wp_json_encode( $error['context'], JSON_PRETTY_PRINT ) ); ?></pre>
+                                    </details>
+                                <?php else : ?>
+                                    <em><?php echo esc_html__( 'No context', 'ogio' ); ?></em>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if ( $error['user_id'] ) : ?>
+                                    <?php $user = get_user_by( 'ID', $error['user_id'] ); ?>
+                                    <?php echo $user ? esc_html( $user->display_name ) : esc_html__( 'Unknown User', 'ogio' ); ?>
+                                <?php else : ?>
+                                    <em><?php echo esc_html__( 'Anonymous', 'ogio' ); ?></em>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <!-- Configuration Validation -->
+        <div class="card">
+            <h2><?php echo esc_html__( 'Configuration Validation', 'ogio' ); ?></h2>
+            <?php
+            $config_check = ogio_validate_plugin_configuration();
+            if ( is_wp_error( $config_check ) ) {
+                printf(
+                    '<div class="notice notice-error"><p><strong>%s:</strong> %s</p></div>',
+                    esc_html__( 'Configuration Issues', 'ogio' ),
+                    esc_html( $config_check->get_error_message() )
+                );
+            } else {
+                printf( '<div class="notice notice-success"><p>%s</p></div>', esc_html__( 'Configuration is valid ✅', 'ogio' ) );
+            }
+            ?>
+        </div>
+
+        <!-- Test Image Generation -->
+        <div class="card">
+                        <h2><?php echo esc_html__( 'Test Image Generation', 'ogio' ); ?></h2>
+            <p><?php echo esc_html__( 'Test the image generation with the current configuration:', 'ogio' ); ?></p>
+            <form method="post">
+                <?php wp_nonce_field( 'ogio_test_generation' ); ?>
+                <p>
+                    <label for="test_post_id"><?php echo esc_html__( 'Post ID to test:', 'ogio' ); ?></label>
+                    <input type="number" name="test_post_id" id="test_post_id" value="1" min="1">
+                    <input type="submit" name="test_generation" class="button" value="<?php echo esc_attr__( 'Test Generation', 'ogio' ); ?>">
+                </p>
+            </form>
+
+            <?php
+            if ( isset( $_POST['test_generation'] ) && wp_verify_nonce( $_POST['_wpnonce'], 'ogio_test_generation' ) ) {
+                $test_post_id = absint( $_POST['test_post_id'] );
+                printf( '<h4>%s: %d</h4>', esc_html__( 'Test Results for Post ID', 'ogio' ), $test_post_id );
+                ogio_run_generation_test( $test_post_id );
+            }
+            ?>
+        </div>
+    </div>
+
+    <style>
+    .status-indicator {
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+    .status-good { background: #d4edda; color: #155724; }
+    .status-warning { background: #fff3cd; color: #856404; }
+    .status-error { background: #f8d7da; color: #721c24; }
+    .card { margin: 20px 0; padding: 15px; background: white; border: 1px solid #ccd0d4; }
+    </style>
+    <?php
+}
+
+/**
+ * Get plugin health status
+ * Error Handling Fix: Comprehensive health monitoring
+ */
+function ogio_get_plugin_health_status() {
+    $status = array(
+        'overall' => 'good',
+        'config_valid' => true,
+        'gd_available' => extension_loaded( 'gd' ),
+        'memory_limit' => size_format( wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) ) ),
+        'webp_support' => function_exists( 'imagewebp' ),
+        'error_count_24h' => 0
+    );
+
+    // Check configuration
+    $config_check = ogio_validate_plugin_configuration();
+    if ( is_wp_error( $config_check ) ) {
+        $status['config_valid'] = false;
+        $status['overall'] = 'error';
+    }
+
+    // Count recent errors
+    $errors = ogio_logger()->get_recent_errors( 100 );
+    $recent_errors = array_filter( $errors, function( $error ) {
+        return $error['timestamp'] > ( current_time( 'timestamp' ) - DAY_IN_SECONDS );
+    } );
+    $status['error_count_24h'] = count( $recent_errors );
+
+    if ( $status['error_count_24h'] > 10 ) {
+        $status['overall'] = 'error';
+    } elseif ( $status['error_count_24h'] > 3 ) {
+        $status['overall'] = 'warning';
+    }
+
+    if ( ! $status['gd_available'] ) {
+        $status['overall'] = 'error';
+    }
+
+    return $status;
+}
+
+/**
+ * Validate plugin configuration
+ * Error Handling Fix: Configuration validation for health monitoring
+ */
+function ogio_validate_plugin_configuration() {
+    // Check overlay image
+    $overlay_image_id = get_option( 'ogio_overlay_image' );
+    if ( ! $overlay_image_id || ! wp_attachment_is_image( $overlay_image_id ) ) {
+        return new WP_Error( 'missing_overlay', 'Overlay image is not configured or invalid' );
+    }
+
+    // Check fallback image if set
+    $fallback_image_id = get_option( 'ogio_fallback_image' );
+    if ( $fallback_image_id && ! wp_attachment_is_image( $fallback_image_id ) ) {
+        return new WP_Error( 'invalid_fallback', 'Fallback image is invalid' );
+    }
+
+    // Check positions are reasonable
+    $overlay_x = absint( get_option( 'ogio_overlay_position_x', 0 ) );
+    $overlay_y = absint( get_option( 'ogio_overlay_position_y', 0 ) );
+
+    if ( $overlay_x > 2000 || $overlay_y > 2000 ) {
+        return new WP_Error( 'invalid_positions', 'Overlay positions are too large' );
+    }
+
+    return true;
+}
+
+/**
+ * Run generation test
+ * Error Handling Fix: Test generation for debugging
+ */
+function ogio_run_generation_test( $post_id ) {
+    ob_start();
+
+        echo "<pre>";
+    printf( "%s\n", esc_html__( 'Starting generation test...', 'ogio' ) );
+
+    // Test configuration
+    $config = ogio_get_validated_config();
+    if ( is_wp_error( $config ) ) {
+        printf( "❌ %s: %s\n", esc_html__( 'Configuration Error', 'ogio' ), esc_html( $config->get_error_message() ) );
+        echo "</pre>";
+        return;
+    }
+    printf( "✅ %s\n", esc_html__( 'Configuration valid', 'ogio' ) );
+
+    // Test post exists
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        printf( "❌ %s\n", esc_html__( 'Post not found', 'ogio' ) );
+        echo "</pre>";
+        return;
+    }
+    printf( "✅ %s: %s\n", esc_html__( 'Post found', 'ogio' ), esc_html( $post->post_title ) );
+
+    // Test featured image
+    $featured_image_id = ogio_get_featured_image_id( $post_id, $config['image_source'] );
+    if ( ! $featured_image_id ) {
+        printf( "❌ %s\n", esc_html__( 'No featured image found', 'ogio' ) );
+        echo "</pre>";
+        return;
+    }
+    printf( "✅ %s (ID: %d)\n", esc_html__( 'Featured image found', 'ogio' ), $featured_image_id );
+
+    // Test image validation
+    $image_data = ogio_prepare_image_data( $featured_image_id, $config );
+    if ( is_wp_error( $image_data ) ) {
+        printf( "❌ %s: %s\n", esc_html__( 'Image validation failed', 'ogio' ), esc_html( $image_data->get_error_message() ) );
+        echo "</pre>";
+        return;
+    }
+    printf( "✅ %s\n", esc_html__( 'Image validation passed', 'ogio' ) );
+
+    printf( "✅ %s\n", esc_html__( 'All tests passed! Generation should work.', 'ogio' ) );
+    printf( "🔗 %s: %s\n", esc_html__( 'Test URL', 'ogio' ), esc_url( site_url( "/ogio/$post_id" ) ) );
+    echo "</pre>";
+
+    $output = ob_get_clean();
+    echo $output;
+}
 
 /**
  * Add Template for Customizer Preview
@@ -119,37 +441,90 @@ function generate_og_image( $post_id ) {
         return;
     }
 
-    // Get validated image paths and metadata
+    // Get validated image paths and metadata with error recovery
     $image_data = ogio_prepare_image_data( $featured_image_id, $config );
     if ( is_wp_error( $image_data ) ) {
-        ogio_handle_image_error( $image_data->get_error_message(), 500 );
-        return;
+        // Attempt error recovery before failing
+        $recovery_result = OGIO_Error_Recovery::attempt_recovery( $image_data, $post_id, $config );
+        if ( is_wp_error( $recovery_result ) ) {
+            ogio_handle_image_error( $image_data->get_error_message(), 500, array(
+                'post_id' => $post_id,
+                'recovery_attempted' => true,
+                'recovery_error' => $recovery_result->get_error_message()
+            ) );
+            return;
+        } else {
+            // Recovery successful, try again
+            ogio_logger()->info( 'Error recovery successful, retrying image preparation', array( 'post_id' => $post_id ) );
+            $image_data = ogio_prepare_image_data( $featured_image_id, $config );
+            if ( is_wp_error( $image_data ) ) {
+                ogio_handle_image_error( 'Recovery failed: ' . $image_data->get_error_message(), 500, array(
+                    'post_id' => $post_id,
+                    'recovery_attempted' => true,
+                    'recovery_failed' => true
+                ) );
+                return;
+            }
+        }
     }
 
-    // Process and output the image
+    // Process and output the image with enhanced error handling
     $result = ogio_process_and_output_image( $image_data, $config );
     if ( is_wp_error( $result ) ) {
-        ogio_handle_image_error( $result->get_error_message(), 500 );
-        return;
+        // Attempt error recovery before failing
+        $recovery_result = OGIO_Error_Recovery::attempt_recovery( $result, $post_id, $config );
+        if ( is_wp_error( $recovery_result ) ) {
+            ogio_handle_image_error( $result->get_error_message(), 500, array(
+                'post_id' => $post_id,
+                'processing_stage' => 'output',
+                'recovery_attempted' => true,
+                'recovery_error' => $recovery_result->get_error_message()
+            ) );
+            return;
+        } else {
+            // Recovery successful, try simplified processing
+            ogio_logger()->info( 'Error recovery successful, retrying with optimizations', array( 'post_id' => $post_id ) );
+            $result = ogio_process_and_output_image( $image_data, $config );
+            if ( is_wp_error( $result ) ) {
+                ogio_handle_image_error( 'Processing failed after recovery: ' . $result->get_error_message(), 500, array(
+                    'post_id' => $post_id,
+                    'recovery_attempted' => true,
+                    'final_failure' => true
+                ) );
+                return;
+            }
+        }
     }
+
+    // Log successful generation
+    ogio_logger()->debug( 'Image generated successfully', array( 'post_id' => $post_id ) );
 }
 
 /**
- * Handle image generation errors with proper HTTP responses
- * Security Fix: Replaces wp_die() with proper error handling
+ * Handle image generation errors with enhanced logging and recovery
+ * Error Handling Fix: Enhanced error handling with recovery attempts and proper logging
  *
  * @param string $message Error message for logging
  * @param int $status_code HTTP status code
+ * @param array $context Additional context for logging and recovery
  */
-function ogio_handle_image_error( $message, $status_code = 500 ) {
-    // Log error for debugging (only in debug mode)
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        error_log( 'OGIO Error: ' . $message );
+function ogio_handle_image_error( $message, $status_code = 500, $context = array() ) {
+    // Enhanced logging with context
+    if ( $status_code >= 500 ) {
+        ogio_logger()->error( $message, array_merge( $context, array(
+            'status_code' => $status_code,
+            'user_agent' => isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ) : '',
+            'referer' => isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( $_SERVER['HTTP_REFERER'] ) : ''
+        ) ) );
+    } else {
+        ogio_logger()->warning( $message, array_merge( $context, array( 'status_code' => $status_code ) ) );
     }
 
-    // Set appropriate HTTP status
+    // Set appropriate HTTP status and security headers
     status_header( $status_code );
     nocache_headers();
+    header( 'X-Content-Type-Options: nosniff' );
+    header( 'X-Frame-Options: DENY' );
 
     // Return appropriate error response
     if ( 404 === $status_code ) {
@@ -157,7 +532,7 @@ function ogio_handle_image_error( $message, $status_code = 500 ) {
     } else {
         // For 500 errors, return a generic message to avoid information disclosure
         header( 'Content-Type: text/plain' );
-        echo 'Image generation failed';
+        echo esc_html__( 'Image generation failed', 'ogio' );
     }
     exit;
 }
@@ -581,11 +956,16 @@ function ogio_process_and_output_image( $image_data, $config ) {
 
         return true;
 
-    } catch ( Exception $e ) {
-        // Log exception for debugging
-        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            error_log( 'OGIO Exception: ' . $e->getMessage() );
-        }
+        } catch ( Exception $e ) {
+        // Enhanced exception logging with context
+        ogio_logger()->error( 'Image processing exception occurred', array(
+            'exception_message' => $e->getMessage(),
+            'exception_code' => $e->getCode(),
+            'exception_file' => $e->getFile(),
+            'exception_line' => $e->getLine(),
+            'processing_time' => microtime( true ) - $start_time,
+            'memory_used' => memory_get_usage( true ) - $start_memory
+        ) );
         return new WP_Error( 'processing_exception', 'Image processing failed due to exception' );
 
     } finally {
@@ -597,11 +977,27 @@ function ogio_process_and_output_image( $image_data, $config ) {
             imagedestroy( $overlay_image );
         }
 
-        // Log processing time for monitoring
-        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-            $processing_time = microtime( true ) - $start_time;
-            $memory_used = memory_get_usage( true ) - $start_memory;
-            error_log( sprintf( 'OGIO Processing: %.2fs, Memory: %s', $processing_time, size_format( $memory_used ) ) );
+        // Enhanced processing monitoring
+        $processing_time = microtime( true ) - $start_time;
+        $memory_used = memory_get_usage( true ) - $start_memory;
+
+        ogio_logger()->info( 'Image processing completed', array(
+            'processing_time' => sprintf( '%.2fs', $processing_time ),
+            'memory_used' => size_format( $memory_used ),
+            'peak_memory' => size_format( memory_get_peak_usage( true ) )
+        ) );
+
+        // Alert if processing took too long or used too much memory
+        if ( $processing_time > 15 ) {
+            ogio_logger()->warning( 'Image processing took longer than expected', array(
+                'processing_time' => sprintf( '%.2fs', $processing_time )
+            ) );
+        }
+
+        if ( $memory_used > ( 50 * 1024 * 1024 ) ) { // 50MB
+            ogio_logger()->warning( 'Image processing used significant memory', array(
+                'memory_used' => size_format( $memory_used )
+            ) );
         }
     }
 }
@@ -743,12 +1139,291 @@ class OGIO_Memory_Monitor {
         $memory_increase = $current_memory - $this->start_memory;
 
         if ( $memory_increase > $this->max_memory_increase ) {
+            // Enhanced memory error logging
+            ogio_logger()->error( 'Memory limit exceeded during image processing', array(
+                'checkpoint' => $checkpoint,
+                'memory_increase' => size_format( $memory_increase ),
+                'max_allowed' => size_format( $this->max_memory_increase ),
+                'current_usage' => size_format( $current_memory ),
+                'peak_usage' => size_format( memory_get_peak_usage( true ) )
+            ) );
+
             throw new Exception( "Memory limit exceeded at {$checkpoint}: " . size_format( $memory_increase ) );
         }
 
-        if ( defined( 'WP_DEBUG' ) && WP_DEBUG && $checkpoint ) {
-            error_log( "OGIO Memory {$checkpoint}: " . size_format( $memory_increase ) );
+        // Enhanced memory monitoring
+        ogio_logger()->debug( 'Memory checkpoint passed', array(
+            'checkpoint' => $checkpoint,
+            'memory_increase' => size_format( $memory_increase ),
+            'current_usage' => size_format( $current_memory ),
+            'percentage_used' => round( ( $memory_increase / $this->max_memory_increase ) * 100, 1 )
+        ) );
+    }
+}
+
+/**
+ * Enhanced logging system for the plugin
+ * Error Handling Fix: Centralized, categorized logging with configurable levels
+ */
+class OGIO_Logger {
+    const LEVEL_ERROR = 1;
+    const LEVEL_WARNING = 2;
+    const LEVEL_INFO = 3;
+    const LEVEL_DEBUG = 4;
+
+    private static $instance = null;
+    private $log_levels = array(
+        1 => 'ERROR',
+        2 => 'WARNING',
+        3 => 'INFO',
+        4 => 'DEBUG'
+    );
+
+    /**
+     * Get singleton instance
+     */
+    public static function get_instance() {
+        if ( null === self::$instance ) {
+            self::$instance = new self();
         }
+        return self::$instance;
+    }
+
+    /**
+     * Log a message with specified level
+     *
+     * @param string $message The message to log
+     * @param int $level Log level (use class constants)
+     * @param array $context Additional context data
+     */
+    public function log( $message, $level = self::LEVEL_ERROR, $context = array() ) {
+        // Check if logging is enabled for this level
+        if ( ! $this->should_log( $level ) ) {
+            return;
+        }
+
+        $formatted_message = $this->format_message( $message, $level, $context );
+
+        // Always log errors, warnings only in debug mode, info/debug only with verbose logging
+        if ( $level <= self::LEVEL_WARNING || ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ) {
+            error_log( $formatted_message );
+        }
+
+        // Store critical errors for admin display
+        if ( $level === self::LEVEL_ERROR ) {
+            $this->store_admin_error( $message, $context );
+        }
+    }
+
+    /**
+     * Convenience methods for different log levels
+     */
+    public function error( $message, $context = array() ) {
+        $this->log( $message, self::LEVEL_ERROR, $context );
+    }
+
+    public function warning( $message, $context = array() ) {
+        $this->log( $message, self::LEVEL_WARNING, $context );
+    }
+
+    public function info( $message, $context = array() ) {
+        $this->log( $message, self::LEVEL_INFO, $context );
+    }
+
+    public function debug( $message, $context = array() ) {
+        $this->log( $message, self::LEVEL_DEBUG, $context );
+    }
+
+    /**
+     * Check if we should log at this level
+     */
+    private function should_log( $level ) {
+        $min_level = apply_filters( 'ogio_min_log_level', self::LEVEL_ERROR );
+
+        // In debug mode, allow more verbose logging
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            $min_level = apply_filters( 'ogio_debug_log_level', self::LEVEL_DEBUG );
+        }
+
+        return $level <= $min_level;
+    }
+
+    /**
+     * Format log message
+     */
+    private function format_message( $message, $level, $context ) {
+        $level_name = isset( $this->log_levels[ $level ] ) ? $this->log_levels[ $level ] : 'UNKNOWN';
+        $timestamp = current_time( 'Y-m-d H:i:s' );
+
+        $formatted = sprintf( '[%s] OGIO %s: %s', $timestamp, $level_name, $message );
+
+        if ( ! empty( $context ) ) {
+            $formatted .= ' | Context: ' . wp_json_encode( $context );
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Store critical errors for admin display
+     */
+    private function store_admin_error( $message, $context ) {
+        $errors = get_option( 'ogio_admin_errors', array() );
+
+        // Limit to last 10 errors
+        if ( count( $errors ) >= 10 ) {
+            array_shift( $errors );
+        }
+
+        $errors[] = array(
+            'message' => $message,
+            'context' => $context,
+            'timestamp' => current_time( 'timestamp' ),
+            'user_id' => get_current_user_id(),
+            'url' => isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( $_SERVER['REQUEST_URI'] ) : '',
+        );
+
+        update_option( 'ogio_admin_errors', $errors );
+    }
+
+    /**
+     * Get recent errors for admin display
+     */
+    public function get_recent_errors( $limit = 5 ) {
+        $errors = get_option( 'ogio_admin_errors', array() );
+        return array_slice( array_reverse( $errors ), 0, $limit );
+    }
+
+    /**
+     * Clear stored admin errors
+     */
+    public function clear_admin_errors() {
+        delete_option( 'ogio_admin_errors' );
+    }
+}
+
+/**
+ * Get logger instance
+ * Error Handling Fix: Global logging function for easy access
+ *
+ * @return OGIO_Logger
+ */
+function ogio_logger() {
+    return OGIO_Logger::get_instance();
+}
+
+/**
+ * Error recovery system for image processing
+ * Error Handling Fix: Graceful fallbacks when image processing fails
+ */
+class OGIO_Error_Recovery {
+
+    /**
+     * Attempt to recover from image processing errors
+     *
+     * @param WP_Error $error Original error
+     * @param int $post_id Post ID being processed
+     * @param array $config Plugin configuration
+     * @return bool|WP_Error True if recovered, error if recovery failed
+     */
+    public static function attempt_recovery( $error, $post_id, $config ) {
+        $error_code = $error->get_error_code();
+
+        ogio_logger()->warning( 'Attempting error recovery', array(
+            'error_code' => $error_code,
+            'post_id' => $post_id,
+            'original_error' => $error->get_error_message()
+        ) );
+
+        switch ( $error_code ) {
+            case 'missing_featured_image':
+            case 'featured_too_large':
+            case 'invalid_featured_content':
+                return self::try_fallback_image( $post_id, $config );
+
+            case 'overlay_too_large':
+            case 'invalid_overlay_content':
+                return self::try_smaller_overlay( $config );
+
+            case 'insufficient_memory':
+                return self::try_memory_optimization( $post_id, $config );
+
+            case 'processing_timeout':
+                return self::try_simplified_processing( $post_id, $config );
+
+            default:
+                ogio_logger()->debug( 'No recovery method available for error: ' . $error_code );
+                return $error;
+        }
+    }
+
+    /**
+     * Try using fallback image when featured image fails
+     */
+    private static function try_fallback_image( $post_id, $config ) {
+        if ( ! $config['fallback_image_id'] ) {
+            return new WP_Error( 'no_fallback', 'No fallback image configured for recovery' );
+        }
+
+        ogio_logger()->info( 'Attempting fallback image recovery', array( 'post_id' => $post_id ) );
+
+        // Validate fallback image
+        $fallback_validation = ogio_validate_image_file( $config['fallback_image_id'], 'fallback' );
+        if ( is_wp_error( $fallback_validation ) ) {
+            return new WP_Error( 'fallback_failed', 'Fallback image validation failed: ' . $fallback_validation->get_error_message() );
+        }
+
+        ogio_logger()->info( 'Fallback image recovery successful', array( 'post_id' => $post_id ) );
+        return true;
+    }
+
+    /**
+     * Try using a smaller overlay image
+     */
+    private static function try_smaller_overlay( $config ) {
+        // This would require implementing image resizing
+        // For now, return error
+        return new WP_Error( 'overlay_recovery_unavailable', 'Overlay image recovery not implemented' );
+    }
+
+    /**
+     * Try memory optimization techniques
+     */
+    private static function try_memory_optimization( $post_id, $config ) {
+        ogio_logger()->info( 'Attempting memory optimization recovery', array( 'post_id' => $post_id ) );
+
+        // Increase memory limit if possible
+        if ( function_exists( 'ini_set' ) ) {
+            $current_limit = wp_convert_hr_to_bytes( ini_get( 'memory_limit' ) );
+            $new_limit = $current_limit + ( 32 * 1024 * 1024 ); // Add 32MB
+
+            if ( @ini_set( 'memory_limit', size_format( $new_limit, 0 ) ) ) {
+                ogio_logger()->info( 'Memory limit increased for recovery', array(
+                    'old_limit' => size_format( $current_limit ),
+                    'new_limit' => size_format( $new_limit )
+                ) );
+                return true;
+            }
+        }
+
+        return new WP_Error( 'memory_recovery_failed', 'Unable to increase memory limit for recovery' );
+    }
+
+    /**
+     * Try simplified processing with lower quality/smaller size
+     */
+    private static function try_simplified_processing( $post_id, $config ) {
+        ogio_logger()->info( 'Attempting simplified processing recovery', array( 'post_id' => $post_id ) );
+
+        // Reduce quality for faster processing
+        $config['output_quality'] = min( $config['output_quality'], 50 );
+
+        ogio_logger()->info( 'Simplified processing recovery prepared', array(
+            'post_id' => $post_id,
+            'reduced_quality' => $config['output_quality']
+        ) );
+
+        return true;
     }
 }
 

@@ -1,4 +1,23 @@
 <?php
+/**
+ * OG Image Overlay - Template Configuration
+ *
+ * Template and preview functionality for the customizer interface
+ * including CSS loading and preview styles management.
+ *
+ * @package    OG_Image_Overlay
+ * @subpackage Template
+ * @since      1.0.0
+ * @version    1.6.0
+ * @author     Al-Mamun Talukder
+ * @link       https://itsmereal.com/plugins/open-graph-image-overlay
+ * @license    GPLv2 or later
+ * @copyright  2024 Al-Mamun Talukder
+ *
+ * WordPress Coding Standards: This file follows WordPress PHP coding standards.
+ * Text Domain: ogio
+ * Domain Path: /languages
+ */
 
 defined( 'ABSPATH' ) || exit;
 
@@ -6,13 +25,13 @@ defined( 'ABSPATH' ) || exit;
  * Preview Styles
 */
 function ogio_preview_style() {
-    // Debug: Log CSS loading (only in debug mode)
-    if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-        error_log( 'OGIO: Loading preview CSS' );
+    // Enhanced CSS loading logging
+    if ( function_exists( 'ogio_logger' ) ) {
+        ogio_logger()->debug( 'Loading preview CSS styles' );
     }
 
-    wp_enqueue_style( 'ogio-preview', plugin_dir_url( __FILE__ ) . '/preview.css', array(), '1.6' );
-    $plugin_images = plugin_dir_url(__DIR__) . 'images';
+    wp_enqueue_style( 'ogio-preview', plugin_dir_url( __FILE__ ) . '/preview.css', array(), OGIO_VERSION );
+    $plugin_images = plugin_dir_url( __DIR__ ) . 'images';
     $preview_image_css = '';
     if ( get_option( 'ogio_fallback_image' ) ) {
         $preview_image = get_option( 'ogio_fallback_image' );
@@ -27,18 +46,13 @@ function ogio_preview_style() {
     wp_add_inline_style( 'ogio-preview', $dynamic_css );
 }
 
-// Debug: Check if we should load preview CSS
-if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-    error_log( 'OGIO: Checking if should load preview CSS' );
-    error_log( 'OGIO: Function exists: ' . ( function_exists('ogio_should_load_preview_css') ? 'yes' : 'no' ) );
-    if ( function_exists('ogio_should_load_preview_css') ) {
-        error_log( 'OGIO: Should load CSS: ' . ( ogio_should_load_preview_css() ? 'yes' : 'no' ) );
-        if ( isset( $_GET['ogio_settings'] ) ) {
-            error_log( 'OGIO: ogio_settings parameter: ' . sanitize_text_field( wp_unslash( $_GET['ogio_settings'] ) ) );
-        } else {
-            error_log( 'OGIO: ogio_settings parameter not set' );
-        }
-    }
+// Enhanced CSS loading diagnostics
+if ( function_exists( 'ogio_logger' ) ) {
+    ogio_logger()->debug( 'Checking CSS loading conditions', array(
+        'function_exists' => function_exists('ogio_should_load_preview_css'),
+        'should_load_css' => function_exists('ogio_should_load_preview_css') ? ogio_should_load_preview_css() : false,
+        'ogio_settings_param' => isset( $_GET['ogio_settings'] ) ? sanitize_text_field( wp_unslash( $_GET['ogio_settings'] ) ) : 'not_set'
+    ) );
 }
 
 // Robust CSS loading with fallback
