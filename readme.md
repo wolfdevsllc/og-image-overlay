@@ -49,6 +49,15 @@ This plugin currently works alongside with two popular SEO plugins.
 - **I already have a different sized featured image dimension for my featured size, how do I change it?**\
   You will need to replace your uploaded images if you want to use the recommended 1200 x 630 pixels dimension or a new dimension that you want to use for all your uploads in future. You can replace your current media files with a handy plugin called [Enable Media Replace](https://wordpress.org/plugins/enable-media-replace/).
 
+## Changelog
+
+### 1.7 (2025-01-28)
+
+- Added OG Image Monitor for error tracking and plugin health monitoring
+- Updated Plugin Update Checker library to v5.6
+- Enhanced code documentation and coding standards
+- Improved code consistency and maintainability
+
 ## License
 
 GNU General Public License v2.0

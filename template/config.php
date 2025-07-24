@@ -22,8 +22,19 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Preview Styles
-*/
+ * Enqueue and configure preview styles for OG Image Overlay customizer
+ *
+ * This function loads the CSS styles needed for the customizer preview,
+ * including dynamic CSS for background images and fallback images.
+ * It generates inline CSS based on current plugin settings.
+ *
+ * @since 1.0.0
+ * @uses wp_enqueue_style() To load the main preview stylesheet
+ * @uses wp_add_inline_style() To add dynamic CSS for images
+ * @uses get_option() To retrieve fallback image setting
+ * @uses wp_get_attachment_url() To get the fallback image URL
+ * @return void
+ */
 function ogio_preview_style() {
     // Enhanced CSS loading logging
     if ( function_exists( 'ogio_logger' ) ) {
@@ -70,7 +81,16 @@ if ( $should_load_css ) {
 }
 
 /**
- * Remove other style sheets while in settings
+ * Remove other style sheets during customizer preview mode
+ *
+ * This function ensures that only the OG Image Overlay preview styles
+ * are loaded when in the settings preview context, preventing conflicts
+ * with other theme and plugin styles that might interfere with the preview.
+ *
+ * @since 1.0.0
+ * @uses ogio_is_settings_preview() To check if in preview mode
+ * @global WP_Styles $wp_styles WordPress styles object
+ * @return void
  */
 function ogio_remove_other_styles() {
     global $wp_styles;

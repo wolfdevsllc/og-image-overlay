@@ -62,7 +62,16 @@ function ogio_should_load_preview_css() {
 }
 
 /**
- * Add Menu Page
+ * Add OG Image Overlay settings menu page to WordPress admin
+ *
+ * Creates a submenu page under Settings that links directly to the
+ * WordPress Customizer with the OG Image Overlay section focused.
+ * The menu provides easy access to plugin configuration.
+ *
+ * @since 1.0.0
+ * @uses add_submenu_page() To add the menu page under Settings
+ * @uses add_query_arg() To build the customizer URL with proper parameters
+ * @return void
  */
 function ogio_add_menu_link() {
     $link = add_query_arg(
@@ -1479,11 +1488,10 @@ add_action( 'init', 'ogio_image_rewrite_rule', 10 );
  * Flush Rewrite Rules
  */
 function ogio_flush_rewrite_rules_maybe() {
-	if ( get_option( 'ogio_flush_rewrite_rules_flag' ) ) {
-		flush_rewrite_rules();
+    if ( get_option( 'ogio_flush_rewrite_rules_flag' ) ) {
+        flush_rewrite_rules();
         delete_option( 'ogio_flush_rewrite_rules_flag' );
     }
-
 }
 
 add_action( 'init', 'ogio_flush_rewrite_rules_maybe', 20 );

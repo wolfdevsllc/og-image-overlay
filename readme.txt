@@ -4,7 +4,7 @@ Donate link: https://itsmereal.com
 Tags: media
 Requires at least: 4.3
 Tested up to: 6.6.2
-Stable tag:
+Stable tag: 1.7
 Requires PHP: 5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -38,6 +38,13 @@ Install and activate the plugin. Got to Settings > OG Image Overlay and update t
 If you are not using one of them but still want to use overlay image on top of your open graph images, you can manually set the link. You can get the generated URL to use from the plugin settings page (look at the right side preview with instructions).
 
 == Changelog ==
+
+= 1.7 =
+* 2025-07-24
+* Added OG Image Monitor for error tracking and plugin health monitoring
+* Updated Plugin Update Checker library to v5.6
+* Enhanced code documentation and coding standards
+* Improved code consistency and maintainability
 
 = 1.6 =
 * 2024-09-15

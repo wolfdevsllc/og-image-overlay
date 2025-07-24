@@ -22,9 +22,16 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Add Customizer Stuff
+ * Add customizer fields and controls for OG Image Overlay plugin
+ *
+ * This function registers the customizer section, settings, and controls
+ * for the OG Image Overlay plugin configuration. It creates a dedicated
+ * section in the WordPress Customizer with all necessary options.
+ *
+ * @since 1.0.0
+ * @param WP_Customize_Manager $wp_customize The WordPress Customizer Manager instance
+ * @return void
  */
-
 function ogio_customizer_fields( $wp_customize ) {
 
     /**
@@ -73,10 +80,10 @@ function ogio_customizer_fields( $wp_customize ) {
         'default'           => 0,
     ) );
 
-    $wp_customize->add_control( new WP_Customize_Control( $wp_customize, 'ogio_overlay_position_x', array(
+        $wp_customize->add_control( new WP_Customize_Control( $wp_customize, 'ogio_overlay_position_x', array(
         'label'       => __('Overlay Position X', 'ogio'),
         'description' => __( 'Overlay image position in X axis', 'ogio' ),
-    	'section'     => 'ogio_settings',
+        'section'     => 'ogio_settings',
         'settings'    => 'ogio_overlay_position_x',
         'type'        => 'number',
         'input_attrs' => array(
