@@ -22,7 +22,7 @@ function ogio_preview_style() {
     wp_add_inline_style( 'ogio-preview', $dynamic_css );
 }
 
-if( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) {
+if( function_exists('ogio_is_settings_preview') && ogio_is_settings_preview() ) {
     add_action( 'wp_enqueue_scripts', 'ogio_preview_style' );
 }
 
@@ -31,7 +31,7 @@ if( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) {
  */
 function ogio_remove_other_styles() {
     global $wp_styles;
-    if( is_customize_preview() && ( isset( $_GET['ogio_settings'] ) && $_GET['ogio_settings'] == 'true' ) ) {
+    if( function_exists('ogio_is_settings_preview') && ogio_is_settings_preview() ) {
         $wp_styles->queue = array( 'ogio-preview' );
     }
 }
