@@ -26,6 +26,23 @@ function ogio_is_settings_preview() {
 }
 
 /**
+ * Less restrictive check for CSS loading during customizer
+ * Used only for enqueueing styles, not for sensitive operations
+ */
+function ogio_should_load_preview_css() {
+    // Basic check for the ogio_settings parameter
+    if ( ! isset( $_GET['ogio_settings'] ) ) {
+        return false;
+    }
+
+    // Sanitize the parameter
+    $ogio_settings = sanitize_text_field( wp_unslash( $_GET['ogio_settings'] ) );
+
+    // Allow CSS loading for customizer context
+    return 'true' === $ogio_settings;
+}
+
+/**
  * Add Menu Page
  */
 function ogio_add_menu_link() {
