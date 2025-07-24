@@ -1,9 +1,9 @@
 === Open Graph Image Overlay ===
-Contributors: realblackz
+Contributors: wolfdevs
 Donate link: https://itsmereal.com
 Tags: media
 Requires at least: 4.3
-Tested up to: 6.6.2
+Tested up to: 6.8.2
 Stable tag: 1.7
 Requires PHP: 5.4
 License: GPLv2 or later
