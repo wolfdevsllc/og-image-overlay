@@ -51,12 +51,44 @@ This plugin currently works alongside with two popular SEO plugins.
 
 ## Changelog
 
-### 1.7 (2025-01-28)
+### 1.7 (July 24, 2025)
 
 - Added OG Image Monitor for error tracking and plugin health monitoring
 - Updated Plugin Update Checker library to v5.6
 - Enhanced code documentation and coding standards
 - Improved code consistency and maintainability
+
+### 1.6 (September 15, 2024)
+
+- Better error handling for unsupported media formats
+- Added option for output format & quality
+
+### 1.5 (June 12, 2024)
+
+- Added option to use Yoast Social Image (Facebook or X) as source image for the open graph image
+
+### 1.4 (September 29, 2022)
+
+- Changed plugin image URL structure
+
+### 1.3 (October 10, 2020)
+
+- Changed plugin instructions
+- Updated plugin updater
+
+### 1.2 (July 12, 2020)
+
+- Changed plugin instructions
+- Added 'How to Setup' video
+
+### 1.1 (June 18, 2020)
+
+- Fix: customizer issue - 'Settings does not exist or is unrecognized.'
+- Fix: Error notice
+
+### 1.0 (May 22, 2020)
+
+- Initial release
 
 ## License
 
